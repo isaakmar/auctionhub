@@ -1,0 +1,2823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>AuctionHub — Trusted Online Auctions</title>
+
+<style>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: Georgia, "Times New Roman", serif;
+  background: #f6f3ed;
+  color: #222;
+  line-height: 1.6;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: #171717;
+  color: white;
+  border-bottom: 3px solid #c79a45;
+}
+
+.nav-container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 16px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.logo {
+  color: #d6ad5b;
+  font-size: 27px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.logo span {
+  color: white;
+}
+
+.nav-links {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.nav-links a {
+  color: white;
+  text-decoration: none;
+  font-size: 15px;
+}
+
+.nav-links a:hover {
+  color: #d6ad5b;
+}
+
+.nav-button {
+  background: #c79a45;
+  color: #111;
+  border: none;
+  padding: 9px 15px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.hero {
+  min-height: 650px;
+  display: flex;
+  align-items: center;
+  background:
+    linear-gradient(
+      rgba(0,0,0,.65),
+      rgba(0,0,0,.65)
+    ),
+    url("https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=1800&q=85")
+    center/cover;
+  color: white;
+}
+
+.hero-content {
+  max-width: 1200px;
+  width: 100%;
+  margin: auto;
+  padding: 80px 22px;
+}
+
+.hero-label {
+  color: #d6ad5b;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.hero h1 {
+  font-size: clamp(42px, 7vw, 78px);
+  line-height: 1.05;
+  max-width: 800px;
+  margin-bottom: 25px;
+}
+
+.hero p {
+  max-width: 650px;
+  font-size: 20px;
+  color: #eee;
+  margin-bottom: 30px;
+}
+
+.primary-button {
+  background: #c79a45;
+  color: #111;
+  border: none;
+  padding: 14px 24px;
+  border-radius: 4px;
+  font-weight: bold;
+  margin-right: 8px;
+}
+
+.secondary-button {
+  background: transparent;
+  color: white;
+  border: 1px solid white;
+  padding: 13px 23px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.section {
+  max-width: 1200px;
+  margin: auto;
+  padding: 75px 22px;
+}
+
+.section-heading {
+  text-align: center;
+  margin-bottom: 45px;
+}
+
+.section-heading small {
+  color: #9a702c;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: bold;
+}
+
+.section-heading h2 {
+  font-size: 42px;
+  margin: 8px 0 12px;
+}
+
+.section-heading p {
+  max-width: 650px;
+  margin: auto;
+  color: #666;
+}
+
+.search-area {
+  background: #fff;
+  border-top: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+}
+
+.search-container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 25px 22px;
+  display: flex;
+  gap: 10px;
+}
+
+.search-container input {
+  flex: 1;
+  padding: 14px;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+}
+
+.search-container button {
+  padding: 0 22px;
+  background: #171717;
+  color: white;
+  border: none;
+  border-radius: 4px;
+}
+
+.auction-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 25px;
+}
+
+.auction-card {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 5px 15px rgba(0,0,0,.07);
+}
+
+.auction-image {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+}
+
+.auction-content {
+  padding: 20px;
+}
+
+.auction-category {
+  color: #9a702c;
+  font-size: 13px;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.auction-card h3 {
+  font-size: 23px;
+  margin: 7px 0;
+}
+
+.auction-description {
+  color: #666;
+  font-size: 14px;
+  min-height: 48px;
+}
+
+.bid-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  margin: 18px 0;
+}
+
+.bid-label {
+  font-size: 12px;
+  color: #777;
+}
+
+.bid-price {
+  font-size: 25px;
+  font-weight: bold;
+}
+
+.timer {
+  color: #a00000;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.card-buttons {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.card-buttons button {
+  flex: 1;
+  min-width: 110px;
+  padding: 10px;
+  border-radius: 4px;
+  border: none;
+  background: #171717;
+  color: white;
+}
+
+.card-buttons .buy-button {
+  background: #c79a45;
+  color: #111;
+}
+
+.sold {
+  color: #b00000;
+  font-weight: bold;
+  padding: 10px 0;
+}
+
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+
+.category-card {
+  background: white;
+  border: 1px solid #ddd;
+  padding: 28px 20px;
+  text-align: center;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: .2s;
+}
+
+.category-card:hover {
+  transform: translateY(-4px);
+  border-color: #c79a45;
+}
+
+.category-icon {
+  font-size: 38px;
+  margin-bottom: 10px;
+}
+
+.category-card h3 {
+  font-size: 18px;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 25px;
+}
+
+.step {
+  text-align: center;
+  padding: 25px;
+}
+
+.step-number {
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  background: #171717;
+  color: #d6ad5b;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto 15px;
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.step h3 {
+  margin-bottom: 8px;
+}
+
+.step p {
+  color: #666;
+}
+
+.dark-section {
+  background: #171717;
+  color: white;
+}
+
+.dark-section .section-heading p {
+  color: #bbb;
+}
+
+.testimonials {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 25px;
+}
+
+.testimonial {
+  background: #242424;
+  padding: 30px;
+  border: 1px solid #444;
+  border-radius: 6px;
+}
+
+.stars {
+  color: #d6ad5b;
+  margin-bottom: 15px;
+}
+
+.testimonial p {
+  color: #ddd;
+  margin-bottom: 18px;
+}
+
+.testimonial strong {
+  color: #d6ad5b;
+}
+
+.about-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 50px;
+  align-items: center;
+}
+
+.about-image {
+  width: 100%;
+  border-radius: 6px;
+}
+
+.about-text h2 {
+  font-size: 42px;
+  margin-bottom: 20px;
+}
+
+.about-text p {
+  color: #666;
+  margin-bottom: 15px;
+}
+
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  gap: 35px;
+}
+
+.contact-info {
+  background: #171717;
+  color: white;
+  padding: 35px;
+  border-radius: 6px;
+}
+
+.contact-info h3 {
+  color: #d6ad5b;
+  margin-bottom: 18px;
+}
+
+.contact-info p {
+  margin-bottom: 18px;
+  color: #ddd;
+}
+
+.contact-form {
+  background: white;
+  padding: 35px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+}
+
+.form-group textarea {
+  min-height: 130px;
+  resize: vertical;
+}
+
+.sell-section {
+  background: #ebe5d8;
+}
+
+.sell-box {
+  max-width: 750px;
+  margin: auto;
+  background: white;
+  padding: 30px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+}
+
+.sell-box h2 {
+  margin-bottom: 20px;
+}
+
+.sell-box input,
+.sell-box select {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 10px;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+}
+
+.sell-box button {
+  background: #171717;
+  color: white;
+  border: none;
+  padding: 13px 20px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+footer {
+  background: #101010;
+  color: white;
+  padding: 50px 22px 25px;
+}
+
+.footer-grid {
+  max-width: 1200px;
+  margin: auto;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 40px;
+}
+
+footer h3 {
+  color: #d6ad5b;
+  margin-bottom: 15px;
+}
+
+footer p,
+footer a {
+  color: #bbb;
+}
+
+footer a {
+  display: block;
+  text-decoration: none;
+  margin-bottom: 7px;
+}
+
+.footer-bottom {
+  max-width: 1200px;
+  margin: 35px auto 0;
+  padding-top: 20px;
+  border-top: 1px solid #333;
+  color: #888;
+  text-align: center;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 3000;
+  inset: 0;
+  background: rgba(0,0,0,.7);
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-content {
+  background: white;
+  width: 100%;
+  max-width: 430px;
+  padding: 30px;
+  border-radius: 7px;
+  position: relative;
+}
+
+.close {
+  position: absolute;
+  right: 15px;
+  top: 10px;
+  border: none;
+  background: none;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+.modal-content h2 {
+  margin-bottom: 20px;
+}
+
+.modal-content input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 10px;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+}
+
+.modal-content button.action {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  background: #171717;
+  color: white;
+  border-radius: 4px;
+  margin-top: 5px;
+}
+
+.details-modal .modal-content {
+  max-width: 700px;
+}
+
+.details-image {
+  width: 100%;
+  max-height: 350px;
+  object-fit: cover;
+  border-radius: 5px;
+  margin-bottom: 15px;
+}
+
+.details-price {
+  font-size: 30px;
+  font-weight: bold;
+  margin: 15px 0;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.empty-message {
+  text-align: center;
+  padding: 40px;
+  color: #777;
+}
+
+@media (max-width: 900px) {
+
+  .auction-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .category-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .steps {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .testimonials {
+    grid-template-columns: 1fr;
+  }
+
+  .about-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .nav-links {
+    display: none;
+  }
+
+}
+
+@media (max-width: 600px) {
+
+  .auction-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .category-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .steps {
+    grid-template-columns: 1fr;
+  }
+
+  .search-container {
+    flex-direction: column;
+  }
+
+  .search-container button {
+    padding: 12px;
+  }
+
+  .hero {
+    min-height: 580px;
+  }
+
+  .section {
+    padding: 55px 18px;
+  }
+
+  .section-heading h2,
+  .about-text h2 {
+    font-size: 32px;
+  }
+
+  .nav-container {
+    padding: 13px 15px;
+  }
+
+  .logo {
+    font-size: 22px;
+  }
+
+}
+
+</style>
+</head>
+
+<body>
+
+
+<!-- =========================
+     NAVIGATION
+========================= -->
+
+<nav class="navbar">
+
+  <div class="nav-container">
+
+    <div class="logo">
+      🔨 Auction<span>Hub</span>
+    </div>
+
+    <div class="nav-links">
+
+      <a href="#auctions">Auctions</a>
+      <a href="#categories">Categories</a>
+      <a href="#how">How It Works</a>
+      <a href="#about">About</a>
+      <a href="#contact">Contact</a>
+
+      <button
+        class="nav-button"
+        onclick="openLogin()"
+      >
+        Login / Sign Up
+      </button>
+
+    </div>
+
+  </div>
+
+</nav>
+
+
+<!-- =========================
+     HERO
+========================= -->
+
+<section class="hero">
+
+  <div class="hero-content">
+
+    <div class="hero-label">
+      The Trusted Auction Marketplace
+    </div>
+
+    <h1>
+      Bid With Confidence.
+      Win With AuctionHub.
+    </h1>
+
+    <p>
+      Discover exceptional vehicles, collectibles,
+      electronics, jewelry, art, real estate and more
+      from sellers around the world.
+    </p>
+
+    <button
+      class="primary-button"
+      onclick="scrollToAuctions()"
+    >
+      View Live Auctions
+    </button>
+
+    <button
+      class="secondary-button"
+      onclick="scrollToSell()"
+    >
+      Sell an Item
+    </button>
+
+  </div>
+
+</section>
+
+
+<!-- =========================
+     SEARCH
+========================= -->
+
+<div class="search-area">
+
+  <div class="search-container">
+
+    <input
+      id="searchInput"
+      type="text"
+      placeholder="Search auctions..."
+      oninput="renderAuctions()"
+    >
+
+    <button onclick="clearSearch()">
+      Search
+    </button>
+
+  </div>
+
+</div>
+
+
+<!-- =========================
+     FEATURED AUCTIONS
+========================= -->
+
+<section
+  class="section"
+  id="auctions"
+>
+
+  <div class="section-heading">
+
+    <small>Live Marketplace</small>
+
+    <h2>Featured Auctions</h2>
+
+    <p>
+      Explore items currently available for bidding.
+      New auctions are added regularly.
+    </p>
+
+  </div>
+
+
+  <div
+    class="auction-grid"
+    id="auctionGrid"
+  ></div>
+
+
+  <div
+    id="noAuctions"
+    class="empty-message hidden"
+  >
+    No auctions match your search.
+  </div>
+
+</section>
+
+
+<!-- =========================
+     CATEGORIES
+========================= -->
+
+<section
+  class="section"
+  id="categories"
+>
+
+  <div class="section-heading">
+
+    <small>Explore</small>
+
+    <h2>Browse Categories</h2>
+
+    <p>
+      Find exactly what you're looking for.
+    </p>
+
+  </div>
+
+
+  <div class="category-grid">
+
+    <div
+      class="category-card"
+      onclick="chooseCategory('Cars & Vehicles')"
+    >
+      <div class="category-icon">🚗</div>
+      <h3>Cars & Vehicles</h3>
+    </div>
+
+
+    <div
+      class="category-card"
+      onclick="chooseCategory('General Merchandise')"
+    >
+      <div class="category-icon">📦</div>
+      <h3>General Merchandise</h3>
+    </div>
+
+
+    <div
+      class="category-card"
+      onclick="chooseCategory('Real Estate')"
+    >
+      <div class="category-icon">🏠</div>
+      <h3>Real Estate</h3>
+    </div>
+
+
+    <div
+      class="category-card"
+      onclick="chooseCategory('Electronics')"
+    >
+      <div class="category-icon">💻</div>
+      <h3>Electronics</h3>
+    </div>
+
+
+    <div
+      class="category-card"
+      onclick="chooseCategory('Fashion & Jewelry')"
+    >
+      <div class="category-icon">💎</div>
+      <h3>Fashion & Jewelry</h3>
+    </div>
+
+
+    <div
+      class="category-card"
+      onclick="chooseCategory('Art & Antiques')"
+    >
+      <div class="category-icon">🎨</div>
+      <h3>Art & Antiques</h3>
+    </div>
+
+
+    <div
+      class="category-card"
+      onclick="chooseCategory('Luxury & Collectibles')"
+    >
+      <div class="category-icon">🏆</div>
+      <h3>Luxury & Collectibles</h3>
+    </div>
+
+
+    <div
+      class="category-card"
+      onclick="chooseCategory('All')"
+    >
+      <div class="category-icon">🔨</div>
+      <h3>View All</h3>
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =========================
+     HOW IT WORKS
+========================= -->
+
+<section
+  class="section dark-section"
+  id="how"
+>
+
+  <div class="section-heading">
+
+    <small>Simple Process</small>
+
+    <h2>How It Works</h2>
+
+    <p>
+      Buying and selling on AuctionHub is simple.
+    </p>
+
+  </div>
+
+
+  <div class="steps">
+
+    <div class="step">
+
+      <div class="step-number">
+        1
+      </div>
+
+      <h3>Find an Auction</h3>
+
+      <p>
+        Browse thousands of items across our
+        marketplace.
+      </p>
+
+    </div>
+
+
+    <div class="step">
+
+      <div class="step-number">
+        2
+      </div>
+
+      <h3>Place Your Bid</h3>
+
+      <p>
+        Enter your bid and compete with other
+        buyers.
+      </p>
+
+    </div>
+
+
+    <div class="step">
+
+      <div class="step-number">
+        3
+      </div>
+
+      <h3>Win</h3>
+
+      <p>
+        If you have the winning bid when the
+        auction ends, the item is yours.
+      </p>
+
+    </div>
+
+
+    <div class="step">
+
+      <div class="step-number">
+        4
+      </div>
+
+      <h3>Complete Your Purchase</h3>
+
+      <p>
+        Arrange payment and delivery with the
+        seller.
+      </p>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =========================
+     TESTIMONIALS
+========================= -->
+
+<section class="section">
+
+  <div class="section-heading">
+
+    <small>Customer Stories</small>
+
+    <h2>What Our Customers Say</h2>
+
+  </div>
+
+
+  <div class="testimonials">
+
+    <div class="testimonial">
+
+      <div class="stars">
+        ★★★★★
+      </div>
+
+      <p>
+        "AuctionHub made it incredibly easy to
+        find and bid on the vehicle I wanted."
+      </p>
+
+      <strong>
+        — Michael R.
+      </strong>
+
+    </div>
+
+
+    <div class="testimonial">
+
+      <div class="stars">
+        ★★★★★
+      </div>
+
+      <p>
+        "The auction process was straightforward
+        and professional."
+      </p>
+
+      <strong>
+        — Sarah T.
+      </strong>
+
+    </div>
+
+
+    <div class="testimonial">
+
+      <div class="stars">
+        ★★★★★
+      </div>
+
+      <p>
+        "I sold several collectibles through
+        AuctionHub and reached buyers I never
+        would have found locally."
+      </p>
+
+      <strong>
+        — David M.
+      </strong>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =========================
+     ABOUT
+========================= -->
+
+<section
+  class="section"
+  id="about"
+>
+
+  <div class="about-grid">
+
+    <div>
+
+      <img
+        class="about-image"
+        src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=1000&q=80"
+        alt="Auction"
+      >
+
+    </div>
+
+
+    <div class="about-text">
+
+      <small>
+        ABOUT AUCTIONHUB
+      </small>
+
+      <h2>
+        A Marketplace Built
+        Around Trust
+      </h2>
+
+      <p>
+        AuctionHub connects buyers and sellers
+        through a simple and transparent online
+        auction experience.
+      </p>
+
+      <p>
+        From everyday merchandise to luxury
+        collectibles and vehicles, our goal is to
+        make auctions accessible to everyone.
+      </p>
+
+      <p>
+        We believe every auction should be clear,
+        fair and easy to understand.
+      </p>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =========================
+     SELL
+========================= -->
+
+<section
+  class="section sell-section"
+  id="sell"
+>
+
+  <div class="section-heading">
+
+    <small>Become A Seller</small>
+
+    <h2>List Your Item</h2>
+
+    <p>
+      Create your auction and reach buyers.
+    </p>
+
+  </div>
+
+
+  <div class="sell-box">
+
+    <h2>
+      Create Auction
+    </h2>
+
+
+    <input
+      id="itemName"
+      placeholder="Item name"
+    >
+
+
+    <select id="itemCategory">
+
+      <option value="">
+        Select category
+      </option>
+
+      <option>
+        Cars & Vehicles
+      </option>
+
+      <option>
+        General Merchandise
+      </option>
+
+      <option>
+        Real Estate
+      </option>
+
+      <option>
+        Electronics
+      </option>
+
+      <option>
+        Fashion & Jewelry
+      </option>
+
+      <option>
+        Art & Antiques
+      </option>
+
+      <option>
+        Luxury & Collectibles
+      </option>
+
+    </select>
+
+
+    <input
+      id="startingBid"
+      type="number"
+      min="1"
+      placeholder="Starting bid"
+    >
+
+
+    <input
+      id="buyNowPrice"
+      type="number"
+      min="0"
+      placeholder="Buy It Now price (optional)"
+    >
+
+
+    <input
+      id="itemImage"
+      placeholder="Image URL (optional)"
+    >
+
+
+    <input
+      id="itemDescription"
+      placeholder="Description"
+    >
+
+
+    <button onclick="createAuction()">
+      Create Auction
+    </button>
+
+  </div>
+
+</section>
+
+
+<!-- =========================
+     CONTACT
+========================= -->
+
+<section
+  class="section"
+  id="contact"
+>
+
+  <div class="section-heading">
+
+    <small>We're Here To Help</small>
+
+    <h2>Contact & Support</h2>
+
+    <p>
+      Have a question? Send our team a message.
+    </p>
+
+  </div>
+
+
+  <div class="contact-grid">
+
+
+    <div class="contact-info">
+
+      <h3>
+        AuctionHub Support
+      </h3>
+
+      <p>
+        📧 support@auctionhub.example
+      </p>
+
+      <p>
+        📞 1-800-AUCTION
+      </p>
+
+      <p>
+        🕐 Monday–Friday<br>
+        9:00 AM – 6:00 PM
+      </p>
+
+      <p>
+        Our support team is here to help with
+        accounts, auctions and marketplace
+        questions.
+      </p>
+
+    </div>
+
+
+    <div class="contact-form">
+
+      <div class="form-group">
+
+        <label>
+          Name
+        </label>
+
+        <input
+          id="contactName"
+          placeholder="Your name"
+        >
+
+      </div>
+
+
+      <div class="form-group">
+
+        <label>
+          Email
+        </label>
+
+        <input
+          id="contactEmail"
+          type="email"
+          placeholder="Your email"
+        >
+
+      </div>
+
+
+      <div class="form-group">
+
+        <label>
+          Message
+        </label>
+
+        <textarea
+          id="contactMessage"
+          placeholder="How can we help?"
+        ></textarea>
+
+      </div>
+
+
+      <button
+        class="primary-button"
+        onclick="sendMessage()"
+      >
+        Send Message
+      </button>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =========================
+     FOOTER
+========================= -->
+
+<footer>
+
+  <div class="footer-grid">
+
+    <div>
+
+      <h3>
+        🔨 AuctionHub
+      </h3>
+
+      <p>
+        A trusted online marketplace connecting
+        buyers and sellers through auctions.
+      </p>
+
+    </div>
+
+
+    <div>
+
+      <h3>
+        Marketplace
+      </h3>
+
+      <a href="#auctions">
+        Live Auctions
+      </a>
+
+      <a href="#categories">
+        Categories
+      </a>
+
+      <a href="#sell">
+        Sell an Item
+      </a>
+
+    </div>
+
+
+    <div>
+
+      <h3>
+        Company
+      </h3>
+
+      <a href="#about">
+        About Us
+      </a>
+
+      <a href="#how">
+        How It Works
+      </a>
+
+      <a href="#contact">
+        Contact
+      </a>
+
+    </div>
+
+  </div>
+
+
+  <div class="footer-bottom">
+
+    © 2026 AuctionHub. All rights reserved.
+
+  </div>
+
+</footer>
+
+
+<!-- =========================
+     LOGIN MODAL
+========================= -->
+
+<div
+  class="modal"
+  id="loginModal"
+>
+
+  <div class="modal-content">
+
+    <button
+      class="close"
+      onclick="closeLogin()"
+    >
+      ×
+    </button>
+
+    <h2>
+      Login / Sign Up
+    </h2>
+
+
+    <input
+      id="loginName"
+      placeholder="Name"
+    >
+
+
+    <input
+      id="loginEmail"
+      type="email"
+      placeholder="Email"
+    >
+
+
+    <input
+      id="loginPassword"
+      type="password"
+      placeholder="Password"
+    >
+
+
+    <button
+      class="action"
+      onclick="login()"
+    >
+      Login
+    </button>
+
+
+    <button
+      class="action"
+      onclick="signup()"
+    >
+      Create Account
+    </button>
+
+  </div>
+
+</div>
+
+
+<!-- =========================
+     DETAILS MODAL
+========================= -->
+
+<div
+  class="modal"
+  id="detailsModal"
+>
+
+  <div class="modal-content details-modal">
+
+    <button
+      class="close"
+      onclick="closeDetails()"
+    >
+      ×
+    </button>
+
+
+    <img
+      id="detailsImage"
+      class="details-image"
+      alt="Auction item"
+    >
+
+
+    <div
+      class="auction-category"
+      id="detailsCategory"
+    ></div>
+
+
+    <h2
+      id="detailsTitle"
+    ></h2>
+
+
+    <p
+      id="detailsDescription"
+    ></p>
+
+
+    <div class="details-price">
+
+      Current Bid:
+      $<span id="detailsPrice"></span>
+
+    </div>
+
+
+    <div
+      class="timer"
+      id="detailsTimer"
+    ></div>
+
+
+    <input
+      id="detailsBid"
+      type="number"
+      placeholder="Enter a higher bid"
+    >
+
+
+    <button
+      class="action"
+      onclick="placeBid()"
+    >
+      💰 Place Bid
+    </button>
+
+
+    <div id="detailsBuyNow"></div>
+
+  </div>
+
+</div>
+
+
+<script>
+
+
+/* =========================
+   STORAGE
+========================= */
+
+const STORAGE_KEY =
+  "auctionHubAuctions";
+
+const USER_KEY =
+  "auctionHubUser";
+
+
+/* =========================
+   AUCTIONS
+========================= */
+
+let auctions =
+  JSON.parse(
+    localStorage.getItem(
+      STORAGE_KEY
+    )
+  ) || [];
+
+
+/* =========================
+   DEFAULT AUCTIONS
+========================= */
+
+if (
+  auctions.length === 0
+) {
+
+  auctions = [
+
+    {
+      name: "Luxury Watch",
+      category: "Luxury & Collectibles",
+      price: 2500,
+      buyNow: 5000,
+      description:
+        "Elegant luxury timepiece in excellent condition.",
+      image:
+        "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?auto=format&fit=crop&w=900&q=80",
+      endTime:
+        Date.now() + 86400000,
+      sold: false
+    },
+
+    {
+      name: "Classic Sports Car",
+      category: "Cars & Vehicles",
+      price: 18500,
+      buyNow: 25000,
+      description:
+        "Classic sports car ready for its next owner.",
+      image:
+        "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=900&q=80",
+      endTime:
+        Date.now() + 172800000,
+      sold: false
+    },
+
+    {
+      name: "Vintage Camera",
+      category: "Electronics",
+      price: 350,
+      buyNow: 650,
+      description:
+        "Vintage camera for collectors and photography enthusiasts.",
+      image:
+        "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=900&q=80",
+      endTime:
+        Date.now() + 259200000,
+      sold: false
+    },
+
+    {
+      name: "Antique Painting",
+      category: "Art & Antiques",
+      price: 1200,
+      buyNow: 2500,
+      description:
+        "Beautiful antique artwork with classic character.",
+      image:
+        "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&w=900&q=80",
+      endTime:
+        Date.now() + 345600000,
+      sold: false
+    },
+
+    {
+      name: "Diamond Necklace",
+      category: "Fashion & Jewelry",
+      price: 3200,
+      buyNow: 6000,
+      description:
+        "Elegant diamond necklace.",
+      image:
+        "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=900&q=80",
+      endTime:
+        Date.now() + 432000000,
+      sold: false
+    },
+
+    {
+      name: "Modern Electronics Bundle",
+      category: "General Merchandise",
+      price: 600,
+      buyNow: 1000,
+      description:
+        "Bundle of popular modern electronics.",
+      image:
+        "https://images.unsplash.com/photo-1468495244123-6c6c332eeece?auto=format&fit=crop&w=900&q=80",
+      endTime:
+        Date.now() + 518400000,
+      sold: false
+    }
+
+  ];
+
+  saveAuctions();
+
+}
+
+
+/* =========================
+   SAVE AUCTIONS
+========================= */
+
+function saveAuctions() {
+
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify(auctions)
+  );
+
+}
+
+
+/* =========================
+   LOGIN
+========================= */
+
+function openLogin() {
+
+  document.getElementById(
+    "loginModal"
+  ).style.display = "flex";
+
+}
+
+
+function closeLogin() {
+
+  document.getElementById(
+    "loginModal"
+  ).style.display = "none";
+
+}
+
+
+function signup() {
+
+  const name =
+    document.getElementById(
+      "loginName"
+    ).value.trim();
+
+  const email =
+    document.getElementById(
+      "loginEmail"
+    ).value.trim();
+
+  const password =
+    document.getElementById(
+      "loginPassword"
+    ).value;
+
+
+  if (
+    !name ||
+    !email ||
+    !password
+  ) {
+
+    alert(
+      "Please fill everything in."
+    );
+
+    return;
+
+  }
+
+
+  localStorage.setItem(
+    USER_KEY,
+    JSON.stringify({
+
+      name:
+        name,
+
+      email:
+        email,
+
+      password:
+        password
+
+    })
+  );
+
+
+  alert(
+    "Account created successfully!"
+  );
+
+
+  closeLogin();
+
+}
+
+
+function login() {
+
+  const email =
+    document.getElementById(
+      "loginEmail"
+    ).value.trim();
+
+  const password =
+    document.getElementById(
+      "loginPassword"
+    ).value;
+
+
+  const savedUser =
+    JSON.parse(
+      localStorage.getItem(
+        USER_KEY
+      )
+    );
+
+
+  if (
+    savedUser &&
+    savedUser.email === email &&
+    savedUser.password === password
+  ) {
+
+    alert(
+      "Welcome, " +
+      savedUser.name +
+      "!"
+    );
+
+    closeLogin();
+
+  } else {
+
+    alert(
+      "Incorrect login information."
+    );
+
+  }
+
+}
+
+
+/* =========================
+   RENDER AUCTIONS
+========================= */
+
+function renderAuctions() {
+
+  const grid =
+    document.getElementById(
+      "auctionGrid"
+    );
+
+  const search =
+    document.getElementById(
+      "searchInput"
+    ).value
+      .toLowerCase()
+      .trim();
+
+
+  grid.innerHTML = "";
+
+
+  let visible =
+    0;
+
+
+  auctions.forEach(
+    function(auction, index) {
+
+      const matches =
+        auction.name
+          .toLowerCase()
+          .includes(search) ||
+        auction.category
+          .toLowerCase()
+          .includes(search) ||
+        auction.description
+          .toLowerCase()
+          .includes(search);
+
+
+      if (!matches) {
+        return;
+      }
+
+
+      visible++;
+
+
+      const card =
+        document.createElement(
+          "div"
+        );
+
+      card.className =
+        "auction-card";
+
+
+      let buttons =
+        "";
+
+
+      if (auction.sold) {
+
+        buttons =
+          '<div class="sold">🔴 SOLD</div>';
+
+      } else {
+
+        buttons =
+          '<div class="card-buttons">' +
+
+          '<button onclick="openDetails(' +
+          index +
+          ')">View Details</button>' +
+
+          (
+            auction.buyNow > 0
+            ?
+            '<button class="buy-button" onclick="buyNow(' +
+            index +
+            ')">⚡ Buy Now $' +
+            auction.buyNow +
+            '</button>'
+            :
+            ""
+          ) +
+
+          '</div>';
+
+      }
+
+
+      card.innerHTML = `
+
+        <img
+          class="auction-image"
+          src="${auction.image}"
+          alt="${auction.name}"
+        >
+
+        <div class="auction-content">
+
+          <div class="auction-category">
+            ${auction.category}
+          </div>
+
+          <h3>
+            ${auction.name}
+          </h3>
+
+          <p class="auction-description">
+            ${auction.description}
+          </p>
+
+          <div class="bid-row">
+
+            <div>
+
+              <div class="bid-label">
+                CURRENT BID
+              </div>
+
+              <div class="bid-price">
+                $${auction.price}
+              </div>
+
+            </div>
+
+            <div
+              class="timer"
+              id="timer-${index}"
+            ></div>
+
+          </div>
+
+          ${buttons}
+
+        </div>
+      `;
+
+
+      grid.appendChild(
+        card
+      );
+
+
+      updateTimer(
+        index
+      );
+
+    }
+  );
+
+
+  document.getElementById(
+    "noAuctions"
+  ).classList.toggle(
+    "hidden",
+    visible !== 0
+  );
+
+}
+
+
+/* =========================
+   TIMER
+========================= */
+
+function updateTimer(index) {
+
+  const auction =
+    auctions[index];
+
+  const timer =
+    document.getElementById(
+      "timer-" + index
+    );
+
+
+  if (!timer) {
+    return;
+  }
+
+
+  if (auction.sold) {
+
+    timer.textContent =
+      "SOLD";
+
+    return;
+
+  }
+
+
+  const remaining =
+    auction.endTime -
+    Date.now();
+
+
+  if (
+    remaining <= 0
+  ) {
+
+    timer.textContent =
+      "Auction ended";
+
+    return;
+
+  }
+
+
+  const days =
+    Math.floor(
+      remaining /
+      86400000
+    );
+
+
+  const hours =
+    Math.floor(
+      (remaining % 86400000) /
+      3600000
+    );
+
+
+  const minutes =
+    Math.floor(
+      (remaining % 3600000) /
+      60000
+    );
+
+
+  const seconds =
+    Math.floor(
+      (remaining % 60000) /
+      1000
+    );
+
+
+  timer.textContent =
+    days + "d " +
+    hours + "h " +
+    minutes + "m " +
+    seconds + "s";
+
+}
+
+
+/* =========================
+   DETAILS
+========================= */
+
+let currentAuctionIndex =
+  null;
+
+
+function openDetails(index) {
+
+  const auction =
+    auctions[index];
+
+
+  if (!auction) {
+    return;
+  }
+
+
+  currentAuctionIndex =
+    index;
+
+
+  document.getElementById(
+    "detailsImage"
+  ).src =
+    auction.image;
+
+
+  document.getElementById(
+    "detailsTitle"
+  ).textContent =
+    auction.name;
+
+
+  document.getElementById(
+    "detailsCategory"
+  ).textContent =
+    auction.category;
+
+
+  document.getElementById(
+    "detailsDescription"
+  ).textContent =
+    auction.description;
+
+
+  document.getElementById(
+    "detailsPrice"
+  ).textContent =
+    auction.price;
+
+
+  document.getElementById(
+    "detailsBid"
+  ).value =
+    "";
+
+
+  const buyArea =
+    document.getElementById(
+      "detailsBuyNow"
+    );
+
+
+  if (auction.sold) {
+
+    buyArea.innerHTML =
+      '<div class="sold">🔴 SOLD</div>';
+
+  }
+
+  else if (
+    auction.buyNow > 0
+  ) {
+
+    buyArea.innerHTML =
+      '<button class="action" onclick="buyNow(' +
+      index +
+      ')">' +
+      '⚡ Buy It Now — $' +
+      auction.buyNow +
+      '</button>';
+
+  }
+
+  else {
+
+    buyArea.innerHTML =
+      "";
+
+  }
+
+
+  document.getElementById(
+    "detailsModal"
+  ).style.display =
+    "flex";
+
+
+  updateDetailsTimer();
+
+}
+
+
+function closeDetails() {
+
+  document.getElementById(
+    "detailsModal"
+  ).style.display =
+    "none";
+
+  currentAuctionIndex =
+    null;
+
+}
+
+
+/* =========================
+   BID
+========================= */
+
+function placeBid() {
+
+  if (
+    currentAuctionIndex === null
+  ) {
+    return;
+  }
+
+
+  const auction =
+    auctions[
+      currentAuctionIndex
+    ];
+
+
+  if (auction.sold) {
+
+    alert(
+      "This auction is already sold."
+    );
+
+    return;
+
+  }
+
+
+  const bid =
+    Number(
+      document.getElementById(
+        "detailsBid"
+      ).value
+    );
+
+
+  if (
+    !bid ||
+    bid <= auction.price
+  ) {
+
+    alert(
+      "Your bid must be higher than the current bid."
+    );
+
+    return;
+
+  }
+
+
+  auction.price =
+    bid;
+
+
+  saveAuctions();
+
+
+  document.getElementById(
+    "detailsPrice"
+  ).textContent =
+    auction.price;
+
+
+  document.getElementById(
+    "detailsBid"
+  ).value =
+    "";
+
+
+  alert(
+    "Bid placed successfully!"
+  );
+
+
+  renderAuctions();
+
+}
+
+
+/* =========================
+   BUY NOW
+========================= */
+
+function buyNow(index) {
+
+  const auction =
+    auctions[index];
+
+
+  if (!auction) {
+    return;
+  }
+
+
+  if (auction.sold) {
+
+    alert(
+      "This item is already sold."
+    );
+
+    return;
+
+  }
+
+
+  const confirmed =
+    confirm(
+      "Buy " +
+      auction.name +
+      " now for $" +
+      auction.buyNow +
+      "?"
+    );
+
+
+  if (!confirmed) {
+    return;
+  }
+
+
+  auction.sold =
+    true;
+
+
+  saveAuctions();
+
+
+  alert(
+    "Purchase successful! 🔴 SOLD"
+  );
+
+
+  if (
+    currentAuctionIndex ===
+    index
+  ) {
+
+    openDetails(index);
+
+  }
+
+
+  renderAuctions();
+
+}
+
+
+/* =========================
+   CREATE AUCTION
+========================= */
+
+function createAuction() {
+
+  const name =
+    document.getElementById(
+      "itemName"
+    ).value.trim();
+
+  const category =
+    document.getElementById(
+      "itemCategory"
+    ).value;
+
+  const startingBid =
+    Number(
+      document.getElementById(
+        "startingBid"
+      ).value
+    );
+
+  const buyNow =
+    Number(
+      document.getElementById(
+        "buyNowPrice"
+      ).value
+    ) || 0;
+
+  const image =
+    document.getElementById(
+      "itemImage"
+    ).value.trim();
+
+  const description =
+    document.getElementById(
+      "itemDescription"
+    ).value.trim();
+
+
+  if (
+    !name ||
+    !category ||
+    !startingBid ||
+    startingBid <= 0
+  ) {
+
+    alert(
+      "Please enter an item name, category, and valid starting bid."
+    );
+
+    return;
+
+  }
+
+
+  auctions.unshift({
+
+    name:
+      name,
+
+    category:
+      category,
+
+    price:
+      startingBid,
+
+    buyNow:
+      buyNow,
+
+    description:
+      description ||
+      "No description provided.",
+
+    image:
+      image ||
+      "https://via.placeholder.com/900x500?text=AuctionHub",
+
+    endTime:
+      Date.now() +
+      86400000,
+
+    sold:
+      false
+
+  });
+
+
+  saveAuctions();
+
+
+  document.getElementById(
+    "itemName"
+  ).value = "";
+
+  document.getElementById(
+    "itemCategory"
+  ).value = "";
+
+  document.getElementById(
+    "startingBid"
+  ).value = "";
+
+  document.getElementById(
+    "buyNowPrice"
+  ).value = "";
+
+  document.getElementById(
+    "itemImage"
+  ).value = "";
+
+  document.getElementById(
+    "itemDescription"
+  ).value = "";
+
+
+  alert(
+    "Auction created successfully!"
+  );
+
+
+  renderAuctions();
+
+
+  scrollToAuctions();
+
+}
+
+
+/* =========================
+   CATEGORY SEARCH
+========================= */
+
+function chooseCategory(category) {
+
+  document.getElementById(
+    "searchInput"
+  ).value =
+    category === "All"
+    ? ""
+    : category;
+
+
+  renderAuctions();
+
+
+  scrollToAuctions();
+
+}
+
+
+/* =========================
+   CLEAR SEARCH
+========================= */
+
+function clearSearch() {
+
+  document.getElementById(
+    "searchInput"
+  ).value =
+    "";
+
+  renderAuctions();
+
+}
+
+
+/* =========================
+   NAVIGATION
+========================= */
+
+function scrollToAuctions() {
+
+  document.getElementById(
+    "auctions"
+  ).scrollIntoView();
+
+}
+
+
+function scrollToSell() {
+
+  document.getElementById(
+    "sell"
+  ).scrollIntoView();
+
+}
+
+
+/* =========================
+   CONTACT
+========================= */
+
+function sendMessage() {
+
+  const name =
+    document.getElementById(
+      "contactName"
+    ).value.trim();
+
+  const email =
+    document.getElementById(
+      "contactEmail"
+    ).value.trim();
+
+  const message =
+    document.getElementById(
+      "contactMessage"
+    ).value.trim();
+
+
+  if (
+    !name ||
+    !email ||
+    !message
+  ) {
+
+    alert(
+      "Please fill out all fields."
+    );
+
+    return;
+
+  }
+
+
+  alert(
+    "Thank you, " +
+    name +
+    "! Your message has been received."
+  );
+
+
+  document.getElementById(
+    "contactName"
+  ).value = "";
+
+  document.getElementById(
+    "contactEmail"
+  ).value = "";
+
+  document.getElementById(
+    "contactMessage"
+  ).value = "";
+
+}
+
+
+/* =========================
+   DETAILS TIMER
+========================= */
+
+function updateDetailsTimer() {
+
+  if (
+    currentAuctionIndex === null
+  ) {
+    return;
+  }
+
+
+  const auction =
+    auctions[
+      currentAuctionIndex
+    ];
+
+
+  if (!auction) {
+    return;
+  }
+
+
+  const timer =
+    document.getElementById(
+      "detailsTimer"
+    );
+
+
+  if (!timer) {
+    return;
+  }
+
+
+  if (auction.sold) {
+
+    timer.textContent =
+      "🔴 SOLD";
+
+    return;
+
+  }
+
+
+  const remaining =
+    auction.endTime -
+    Date.now();
+
+
+  if (
+    remaining <= 0
+  ) {
+
+    timer.textContent =
+      "⏰ Auction ended";
+
+    return;
+
+  }
+
+
+  const hours =
+    Math.floor(
+      remaining /
+      3600000
+    );
+
+
+  const minutes =
+    Math.floor(
+      (remaining % 3600000) /
+      60000
+    );
+
+
+  const seconds =
+    Math.floor(
+      (remaining % 60000) /
+      1000
+    );
+
+
+  timer.textContent =
+    "⏰ Time left: " +
+    hours +
+    "h " +
+    minutes +
+    "m " +
+    seconds +
+    "s";
+
+}
+
+
+/* =========================
+   UPDATE TIMERS
+========================= */
+
+setInterval(
+  function() {
+
+    auctions.forEach(
+      function(auction, index) {
+
+        updateTimer(index);
+
+      }
+    );
+
+
+    updateDetailsTimer();
+
+  },
+  1000
+);
+
+
+/* =========================
+   CLOSE MODALS WHEN
+   CLICKING OUTSIDE
+========================= */
+
+window.addEventListener(
+  "click",
+  function(event) {
+
+    const loginModal =
+      document.getElementById(
+        "loginModal"
+      );
+
+    const detailsModal =
+      document.getElementById(
+        "detailsModal"
+      );
+
+
+    if (
+      event.target ===
+      loginModal
+    ) {
+
+      closeLogin();
+
+    }
+
+
+    if (
+      event.target ===
+      detailsModal
+    ) {
+
+      closeDetails();
+
+    }
+
+  }
+);
+
+
+/* =========================
+   START
+========================= */
+
+renderAuctions();
+
+</script>
+
+</body>
+</html>
