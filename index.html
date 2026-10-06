@@ -1,195 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>AuctionHub — Ontario Local Auctions</title>
-
-<style>
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
-body {
-  font-family: Georgia, "Times New Roman", serif;
-  background: #f6f3ed;
-  color: #222;
-  line-height: 1.6;
-}
-
-button,
-input,
-textarea,
-select {
-  font: inherit;
-}
-
-button {
-  cursor: pointer;
-}
-
-.navbar {
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  background: #171717;
-  color: white;
-  border-bottom: 3px solid #c79a45;
-}
-
-.nav-container {
-  max-width: 1200px;
-  margin: auto;
-  padding: 16px 22px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-}
-
-.logo {
-  color: #d6ad5b;
-  font-size: 27px;
-  font-weight: bold;
-  white-space: nowrap;
-}
-
-.logo span {
-  color: white;
-}
-
-.nav-links {
-  display: flex;
-  gap: 18px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.nav-links a {
-  color: white;
-  text-decoration: none;
-  font-size: 15px;
-}
-
-.nav-links a:hover {
-  color: #d6ad5b;
-}
-
-.nav-button {
-  background: #c79a45;
-  color: #111;
-  border: none;
-  padding: 9px 15px;
-  border-radius: 4px;
-  font-weight: bold;
-}
-
-.hero {
-  min-height: 650px;
-  display: flex;
-  align-items: center;
-  background:
-    linear-gradient(
-      rgba(0,0,0,.65),
-      rgba(0,0,0,.65)
-    ),
-    url("https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=1800&q=85")
-    center/cover;
-  color: white;
-}
-
-.hero-content {
-  max-width: 1200px;
-  width: 100%;
-  margin: auto;
-  padding: 80px 22px;
-}
-
-.hero-label {
-  color: #d6ad5b;
-  text-transform: uppercase;
-  letter-spacing: 3px;
-  font-weight: bold;
-  margin-bottom: 15px;
-}
-
-.hero h1 {
-  font-size: clamp(42px, 7vw, 78px);
-  line-height: 1.05;
-  max-width: 800px;
-  margin-bottom: 25px;
-}
-
-.hero p {
-  max-width: 650px;
-  font-size: 20px;
-  color: #eee;
-  margin-bottom: 30px;
-}
-
-.primary-button {
-  background: #c79a45;
-  color: #111;
-  border: none;
-  padding: 14px 24px;
-  border-radius: 4px;
-  font-weight: bold;
-  margin-right: 8px;
-}
-
-.secondary-button {
-  background: transparent;
-  color: white;
-  border: 1px solid white;
-  padding: 13px 23px;
-  border-radius: 4px;
-  font-weight: bold;
-}
-
-.section {
-  max-width: 1200px;
-  margin: auto;
-  padding: 75px 22px;
-}
-
-.section-heading {
-  text-align: center;
-  margin-bottom: 45px;
-}
-
-.section-heading small {
-  color: #9a702c;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  font-weight: bold;
-}
-
-.section-heading h2 {
-  font-size: 42px;
-  margin: 8px 0 12px;
-}
-
-.section-heading p {
-  max-width: 650px;
-  margin: auto;
-  color: #666;
-}
-
-.search-area {
-  background: #fff;
-  border-top: 1px solid #ddd;
-  border-bottom: 1px solid #ddd;
-}
-
-.search-container {
-  max-width: 1200px;
   margin: auto;
   padding: 25px 22px;
   display: flex;
@@ -1635,10 +1443,10 @@ async function createAuction(){
  if(!signedIn())return;const name=el('itemName').value.trim(),city=el('itemCity').value.trim(),category=el('itemCategory').value,price=Number(el('startingBid').value),buy=Number(el('buyNowPrice').value),description=el('itemDescription').value.trim(),rawImage=el('itemImage').value.trim();
  if(!name||name.length>140||!city||city.length>80||!category||!Number.isFinite(price)||price<=0||!Number.isFinite(buy)||buy<0||(buy&&buy<price)||description.length>4000){alert('Enter an item, Ontario pickup city, category and valid prices. Reservation price must be at least the starting bid.');return;}
  if(rawImage&&!imageUrl(rawImage)){alert('Use a valid HTTPS photo URL.');return;}
- const file=el('itemPhoto').files[0];if(file&&(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>5242880)){alert('Choose a JPG, PNG or WebP photo up to 5 MB.');return;}
- el('createButton').disabled=true;let uploadedPath=null;
- try{let photo=imageUrl(rawImage);if(file){const ext={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'}[file.type];uploadedPath=signedUser.id+'/'+crypto.randomUUID()+'.'+ext;const result=await db.storage.from('listing-photos').upload(uploadedPath,file,{contentType:file.type,upsert:false});if(result.error){uploadedPath=null;throw result.error;}photo=db.storage.from('listing-photos').getPublicUrl(uploadedPath).data.publicUrl;}const {error}=await db.from('auctions').insert({seller_id:signedUser.id,seller_name:String(signedUser.user_metadata.display_name||'Ontario seller').slice(0,80),name,city,category,price,buy_now:buy||null,description,image_url:photo,end_time:new Date(Date.now()+300000).toISOString()});if(error)throw error;
- ['itemName','itemCity','itemCategory','startingBid','buyNowPrice','itemImage','itemPhoto','itemDescription'].forEach(id=>el(id).value='');clearSearch();await loadAuctions();scrollToAuctions();alert('Your listing is saved and visible to other visitors.');}catch(e){if(uploadedPath)await db.storage.from('listing-photos').remove([uploadedPath]);alert(e.message);}finally{el('createButton').disabled=false;}
+ const files=Array.from(el('itemPhoto').files);if(files.length+(rawImage?1:0)>6){alert('Choose up to 6 photos total, including any photo URL.');return;}if(files.some(file=>!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>5242880)){alert('Each photo must be JPG, PNG or WebP and no larger than 5 MB.');return;}
+ el('createButton').disabled=true;const uploadedPaths=[];
+ try{const photos=rawImage?[imageUrl(rawImage)]:[];for(const file of files){const ext={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'}[file.type];const path=signedUser.id+'/'+crypto.randomUUID()+'.'+ext;const result=await db.storage.from('listing-photos').upload(path,file,{contentType:file.type,upsert:false});if(result.error)throw result.error;uploadedPaths.push(path);photos.push(db.storage.from('listing-photos').getPublicUrl(path).data.publicUrl);}const photo=photos[0]||'';const {error}=await db.from('auctions').insert({seller_id:signedUser.id,seller_name:String(signedUser.user_metadata.display_name||'Ontario seller').slice(0,80),name,city,category,price,buy_now:buy||null,description,image_url:photo,image_urls:photos,end_time:new Date(Date.now()+300000).toISOString()});if(error)throw error;
+ ['itemName','itemCity','itemCategory','startingBid','buyNowPrice','itemImage','itemPhoto','itemDescription'].forEach(id=>el(id).value='');clearSearch();await loadAuctions();scrollToAuctions();alert('Your listing is saved and visible to other visitors.');}catch(e){if(uploadedPaths.length)await db.storage.from('listing-photos').remove(uploadedPaths);alert(e.message);}finally{el('createButton').disabled=false;}
 }
 function chooseCategory(c){el('searchInput').value=c==='All'?'':c;renderAuctions();scrollToAuctions();}
 function clearSearch(){el('searchInput').value='';el('cityFilter').value='';renderAuctions();}
@@ -1977,4 +1785,53 @@ const categorySelect = document.getElementById("itemCategory");
     categorySelect.add(new Option(name, name));
   }
 });
+</script>
+
+<style>
+.photo-thumbnails{display:flex;gap:8px;overflow-x:auto;padding:10px 0}
+.photo-thumbnails button{padding:2px;background:white;border:2px solid #dce3e9;border-radius:8px;flex-shrink:0}
+.photo-thumbnails button[aria-pressed="true"]{border-color:#246842}
+.photo-thumbnails img{width:68px;height:56px;object-fit:cover;border-radius:4px}
+</style>
+<script>
+el("itemPhoto").multiple = true;
+const photoHelp = document.createElement("p");
+photoHelp.textContent = "Add up to 6 photos · JPG, PNG or WebP · 5 MB per photo. First photo is the cover.";
+el("itemPhoto").after(photoHelp);
+el("itemPhoto").addEventListener("change", () => {
+  photoHelp.textContent = el("itemPhoto").files.length +
+    " photos selected. Maximum 6, including any photo URL.";
+});
+const galleryRefreshBase = refreshDetails;
+refreshDetails = function() {
+  galleryRefreshBase();
+  const a = auctions[currentAuctionIndex];
+  if (!a) return;
+  let gallery = el("listingPhotoGallery");
+  if (!gallery) {
+    gallery = document.createElement("div");
+    gallery.id = "listingPhotoGallery";
+    gallery.className = "photo-thumbnails";
+    gallery.setAttribute("aria-label","Listing photos");
+    el("detailsImage").after(gallery);
+  }
+  gallery.replaceChildren();
+  const photos = [...new Set([a.image,...(a.image_urls || [])].map(imageUrl).filter(Boolean))];
+  gallery.hidden = photos.length < 2;
+  photos.forEach((url,index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.setAttribute("aria-label","Show photo " + (index+1));
+    button.setAttribute("aria-pressed",String(index === 0));
+    const img = document.createElement("img");
+    img.src = url;
+    img.alt = "Photo " + (index+1) + " of " + a.name;
+    button.appendChild(img);
+    button.onclick = () => {
+      el("detailsImage").src = url;
+      gallery.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed",String(b===button)));
+    };
+    gallery.appendChild(button);
+  });
+};
 </script>
