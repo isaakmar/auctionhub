@@ -760,8 +760,8 @@ footer a {
 
   <div class="hero-content">
 
-    <p style="background:#171717;padding:12px;border:1px solid #c79a45">Early access: shared Ontario listings. Photo uploads, seller contact and support messaging are still being prepared.</p>
-    <p id="connectionStatus" role="status">Connecting to Ontario listings…</p><p id="accountLabel"></p><button id="logoutButton" onclick="logout()" hidden>Sign out</button>
+    <p style="background:#171717;padding:12px;border:1px solid #c79a45">Early access: shared Ontario listings. Photos and private seller messages are available after sign-in. Public signup and support are still being prepared.</p>
+    <p id="connectionStatus" role="status">Connecting to Ontario listings…</p><p id="accountLabel"></p><button onclick="openInbox()">Messages</button><button id="logoutButton" onclick="logout()" hidden>Sign out</button>
 <div class="hero-label">
       Ontario Local Auctions
     </div>
@@ -1197,6 +1197,9 @@ footer a {
     >
 
 
+    <label for="itemPhoto">Upload an item photo from your phone (optional)</label>
+    <input id="itemPhoto" type="file" accept="image/jpeg,image/png,image/webp">
+    <p>JPG, PNG or WebP, up to 5 MB. Listing photos are public. Only upload photos you want visitors to see.</p>
     <input
       id="itemImage"
       placeholder="Image URL (optional)"
@@ -1540,17 +1543,18 @@ footer a {
     </button>
 
 
-    <div id="detailsBuyNow"></div>
+    <div id="detailsBuyNow"></div><button id="sellerMessageButton" onclick="messageSeller()">Message seller</button>
 
   </div>
 
 </div>
 
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<div id="inboxModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="inboxTitle"><div class="modal-content"><button onclick="closeInbox()" aria-label="Close messages">×</button><h2 id="inboxTitle">Private listing messages</h2><p>Only you and the other participant can read this conversation. Arrange a public pickup location. No payments are collected here.</p><button onclick="loadConversations()">Refresh conversations</button><p id="inboxStatus" role="status"></p><div id="conversationList" style="display:flex;flex-wrap:wrap;gap:8px"></div><div id="messageList" style="max-height:280px;overflow:auto;border-top:1px solid #ddd;margin:12px 0"></div><label for="messageBody">Your message</label><textarea id="messageBody" maxlength="2000" disabled style="width:100%;min-height:90px"></textarea><button id="sendPrivateButton" onclick="sendPrivateMessage()" disabled>Send message</button></div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
 <script>
 const db = window.supabase.createClient('https://nabxmbmxsjiwfefvmhsg.supabase.co','sb_publishable_h5WAOxR6ld4qW_04Xh19OQ_KSsrLCUM');
-let auctions=[], currentAuctionIndex=null, signedUser=null, loading=false;
+let auctions=[], currentAuctionIndex=null, signedUser=null, loading=false, activeConversation=null, conversations=[], messageLoading=false;
 const el=id=>document.getElementById(id);
 const money=n=>new Intl.NumberFormat('en-CA',{style:'currency',currency:'CAD'}).format(Number(n));
 function escapeText(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
@@ -1569,7 +1573,7 @@ async function signup(){
 }
 async function login(){const {error}=await db.auth.signInWithPassword({email:el('loginEmail').value.trim(),password:el('loginPassword').value});el('loginPassword').value='';if(error){alert(error.message);return;}closeLogin();}
 async function logout(){const {error}=await db.auth.signOut();if(error)alert(error.message);}
-function updateAccount(user){signedUser=user;el('accountLabel').textContent=user?'Signed in as '+(user.user_metadata.display_name||'member'):'Sign in to list or bid';el('logoutButton').hidden=!user;}
+function updateAccount(user){signedUser=user;el('accountLabel').textContent=user?'Signed in as '+(user.user_metadata.display_name||'member'):'Sign in to list or bid';el('logoutButton').hidden=!user;if(!user){activeConversation=null;conversations=[];el('inboxModal').style.display='none';el('messageList').replaceChildren();el('conversationList').replaceChildren();el('messageBody').value='';}if(currentAuctionIndex!==null)refreshDetails();}
 async function loadAuctions(){
  if(loading)return;loading=true;
  try{const {data,error}=await db.from('auctions').select('*').order('created_at',{ascending:false}).limit(200);if(error)throw error;
@@ -1591,18 +1595,19 @@ function renderAuctions(){
 function remaining(a){if(a.sold)return 'Reserved · no online payment';const ms=a.endTime-Date.now();if(ms<=0)return 'Auction ended';return Math.floor(ms/86400000)+'d '+Math.floor(ms%86400000/3600000)+'h '+Math.floor(ms%3600000/60000)+'m '+Math.floor(ms%60000/1000)+'s';}
 function updateTimer(i){if(el('timer-'+i))el('timer-'+i).textContent=remaining(auctions[i]);}
 function updateDetailsTimer(){if(currentAuctionIndex!==null&&auctions[currentAuctionIndex]){el('detailsTimer').textContent=remaining(auctions[currentAuctionIndex]);el('bidButton').disabled=auctions[currentAuctionIndex].sold||auctions[currentAuctionIndex].endTime<=Date.now();}}
-function refreshDetails(){const a=auctions[currentAuctionIndex];if(!a)return;el('detailsImage').hidden=!a.image;if(a.image)el('detailsImage').src=a.image;el('detailsTitle').textContent=a.name;el('detailsCategory').textContent=a.category+' · '+a.city+', Ontario · Seller: '+a.seller_name;el('detailsDescription').textContent=a.description;el('detailsPrice').textContent=Number(a.price).toFixed(2);el('detailsBuyNow').innerHTML=!a.sold&&a.endTime>Date.now()&&a.buyNow?`<button class="action" onclick="buyNow(${currentAuctionIndex})">Reserve for ${money(a.buyNow)} · pay at pickup</button>`:'';updateDetailsTimer();}
+function refreshDetails(){const a=auctions[currentAuctionIndex];if(!a)return;el('detailsImage').hidden=!a.image;if(a.image)el('detailsImage').src=a.image;el('detailsTitle').textContent=a.name;el('detailsCategory').textContent=a.category+' · '+a.city+', Ontario · Seller: '+a.seller_name;el('detailsDescription').textContent=a.description;el('detailsPrice').textContent=Number(a.price).toFixed(2);el('detailsBuyNow').innerHTML=!a.sold&&a.endTime>Date.now()&&a.buyNow?`<button class="action" onclick="buyNow(${currentAuctionIndex})">Reserve for ${money(a.buyNow)} · pay at pickup</button>`:'';el('sellerMessageButton').hidden=!!signedUser&&a.seller_id===signedUser.id;updateDetailsTimer();}
 function openDetails(index){currentAuctionIndex=index;el('detailsBid').value='';refreshDetails();el('detailsModal').style.display='flex';}
 function closeDetails(){el('detailsModal').style.display='none';currentAuctionIndex=null;}
 async function placeBid(){if(!signedIn()||currentAuctionIndex===null)return;const amount=Number(el('detailsBid').value);if(!Number.isFinite(amount)||amount<=0){alert('Enter a valid bid.');return;}el('bidButton').disabled=true;const {error}=await db.rpc('place_bid',{p_auction_id:auctions[currentAuctionIndex].id,p_amount:amount});if(error)alert(error.message);else {el('detailsBid').value='';alert('Your bid is saved.');}await loadAuctions();updateDetailsTimer();}
-async function buyNow(index){if(!signedIn())return;const a=auctions[index];if(!confirm('Reserve '+a.name+' for '+money(a.buyNow)+'? No online payment will be taken.'))return;const {error}=await db.rpc('reserve_item',{p_auction_id:a.id});if(error)alert(error.message);else alert('Reservation saved. Seller contact and pickup coordination will be added next.');await loadAuctions();}
+async function buyNow(index){if(!signedIn())return;const a=auctions[index];if(!confirm('Reserve '+a.name+' for '+money(a.buyNow)+'? No online payment will be taken.'))return;const {error}=await db.rpc('reserve_item',{p_auction_id:a.id});if(error)alert(error.message);else {alert('Reservation saved. Open Messages to arrange local pickup with the seller.');await startConversation(a.id,a.seller_id);}await loadAuctions();}
 async function createAuction(){
  if(!signedIn())return;const name=el('itemName').value.trim(),city=el('itemCity').value.trim(),category=el('itemCategory').value,price=Number(el('startingBid').value),buy=Number(el('buyNowPrice').value),description=el('itemDescription').value.trim(),rawImage=el('itemImage').value.trim();
  if(!name||name.length>140||!city||city.length>80||!category||!Number.isFinite(price)||price<=0||!Number.isFinite(buy)||buy<0||(buy&&buy<price)||description.length>4000){alert('Enter an item, Ontario pickup city, category and valid prices. Reservation price must be at least the starting bid.');return;}
  if(rawImage&&!imageUrl(rawImage)){alert('Use a valid HTTPS photo URL.');return;}
- el('createButton').disabled=true;
- try{const {error}=await db.from('auctions').insert({seller_id:signedUser.id,seller_name:String(signedUser.user_metadata.display_name||'Ontario seller').slice(0,80),name,city,category,price,buy_now:buy||null,description,image_url:imageUrl(rawImage),end_time:new Date(Date.now()+86400000).toISOString()});if(error)throw error;
- ['itemName','itemCity','itemCategory','startingBid','buyNowPrice','itemImage','itemDescription'].forEach(id=>el(id).value='');clearSearch();await loadAuctions();scrollToAuctions();alert('Your listing is saved and visible to other visitors.');}catch(e){alert(e.message);}finally{el('createButton').disabled=false;}
+ const file=el('itemPhoto').files[0];if(file&&(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>5242880)){alert('Choose a JPG, PNG or WebP photo up to 5 MB.');return;}
+ el('createButton').disabled=true;let uploadedPath=null;
+ try{let photo=imageUrl(rawImage);if(file){const ext={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'}[file.type];uploadedPath=signedUser.id+'/'+crypto.randomUUID()+'.'+ext;const result=await db.storage.from('listing-photos').upload(uploadedPath,file,{contentType:file.type,upsert:false});if(result.error){uploadedPath=null;throw result.error;}photo=db.storage.from('listing-photos').getPublicUrl(uploadedPath).data.publicUrl;}const {error}=await db.from('auctions').insert({seller_id:signedUser.id,seller_name:String(signedUser.user_metadata.display_name||'Ontario seller').slice(0,80),name,city,category,price,buy_now:buy||null,description,image_url:photo,end_time:new Date(Date.now()+86400000).toISOString()});if(error)throw error;
+ ['itemName','itemCity','itemCategory','startingBid','buyNowPrice','itemImage','itemPhoto','itemDescription'].forEach(id=>el(id).value='');clearSearch();await loadAuctions();scrollToAuctions();alert('Your listing is saved and visible to other visitors.');}catch(e){if(uploadedPath)await db.storage.from('listing-photos').remove([uploadedPath]);alert(e.message);}finally{el('createButton').disabled=false;}
 }
 function chooseCategory(c){el('searchInput').value=c==='All'?'':c;renderAuctions();scrollToAuctions();}
 function clearSearch(){el('searchInput').value='';el('cityFilter').value='';renderAuctions();}
@@ -1610,10 +1615,42 @@ function scrollToAuctions(){el('auctions').scrollIntoView({behavior:'smooth'});}
 function scrollToSell(){el('sell').scrollIntoView({behavior:'smooth'});}
 function sendMessage(){alert('Support messaging is not connected yet. No message has been sent.');}
 window.addEventListener('click',e=>{if(e.target===el('loginModal'))closeLogin();if(e.target===el('detailsModal'))closeDetails();});
-window.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDetails();closeLogin();}});
+window.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDetails();closeLogin();closeInbox();}});
 db.auth.onAuthStateChange((_event,session)=>updateAccount(session?.user||null));
 db.auth.getSession().then(({data})=>updateAccount(data.session?.user||null));
 loadAuctions();setInterval(()=>{auctions.forEach((a,i)=>updateTimer(i));updateDetailsTimer();},1000);setInterval(()=>{if(!document.hidden)loadAuctions();},15000);
+
+function closeInbox(){el('inboxModal').style.display='none';activeConversation=null;el('messageBody').disabled=true;el('sendPrivateButton').disabled=true;}
+async function openInbox(){if(!signedIn())return;el('inboxModal').style.display='flex';await loadConversations();}
+async function loadConversations(){
+ const {data,error}=await db.from('conversations').select('id,buyer_id,seller_id,created_at,auctions(name,city)').order('created_at',{ascending:false}).limit(100);
+ if(error){el('inboxStatus').textContent='Could not load conversations: '+error.message;return;}
+ conversations=data;el('conversationList').replaceChildren();
+ for(const c of data){const b=document.createElement('button');b.type='button';b.textContent=(c.auctions?.name||'Listing')+' · '+(c.buyer_id===signedUser.id?'Seller':'Buyer');b.onclick=()=>selectConversation(c.id);el('conversationList').appendChild(b);}
+ el('inboxStatus').textContent=data.length?'Choose a conversation to read and reply.':'No conversations yet. Open a listing and tap Message seller.';
+}
+async function messageSeller(){if(currentAuctionIndex===null)return;const a=auctions[currentAuctionIndex];await startConversation(a.id,a.seller_id);}
+async function startConversation(auctionId,sellerId){
+ if(!signedIn())return;if(sellerId===signedUser.id){alert('Open Messages to reply to interested buyers.');return;}
+ let {data,error}=await db.from('conversations').select('id').eq('auction_id',auctionId).eq('buyer_id',signedUser.id).maybeSingle();
+ if(error){alert(error.message);return;}
+ if(!data){const result=await db.from('conversations').insert({auction_id:auctionId,buyer_id:signedUser.id,seller_id:sellerId}).select('id').single();data=result.data;error=result.error;
+ if(error?.code==='23505'){const retry=await db.from('conversations').select('id').eq('auction_id',auctionId).eq('buyer_id',signedUser.id).single();data=retry.data;error=retry.error;}}
+ if(error){alert(error.message);return;}closeDetails();await openInbox();await selectConversation(data.id);
+}
+async function selectConversation(id){el('messageBody').disabled=true;el('sendPrivateButton').disabled=true;activeConversation=id;el('messageBody').value='';el('messageList').replaceChildren();await loadMessages();}
+async function loadMessages(){
+ if(!activeConversation||messageLoading||!signedUser)return;messageLoading=true;const id=activeConversation;
+ try{const {data,error}=await db.from('messages').select('sender_id,body,created_at').eq('conversation_id',id).order('created_at',{ascending:false}).limit(100);if(id!==activeConversation||!signedUser)return;if(error)throw error;
+ el('messageList').replaceChildren();for(const m of data.reverse()){const row=document.createElement('p');row.textContent=(m.sender_id===signedUser.id?'You':'Other person')+' · '+new Date(m.created_at).toLocaleString()+'\n'+m.body;row.style.whiteSpace='pre-wrap';el('messageList').appendChild(row);}
+ el('inboxStatus').textContent=data.length?'Messages refresh every 15 seconds.':'Start by asking about the item or arranging local pickup.';el('messageBody').disabled=false;el('sendPrivateButton').disabled=false;
+ }catch(e){el('inboxStatus').textContent='Could not load messages: '+e.message;}finally{messageLoading=false;}
+}
+async function sendPrivateMessage(){
+ if(!signedIn()||!activeConversation)return;const body=el('messageBody').value.trim();if(!body||body.length>2000){alert('Write a message of 1 to 2,000 characters.');return;}el('sendPrivateButton').disabled=true;
+ try{const {error}=await db.from('messages').insert({conversation_id:activeConversation,sender_id:signedUser.id,body});if(error)throw error;el('messageBody').value='';await loadMessages();}catch(e){alert(e.message);}finally{el('sendPrivateButton').disabled=!activeConversation;}
+}
+setInterval(()=>{if(!document.hidden&&activeConversation)loadMessages();},15000);
 
 </script>
 

@@ -72,3 +72,43 @@ create index bids_auction_idx on public.bids(auction_id);
 create index bids_bidder_idx on public.bids(bidder_id);
 create index auctions_seller_idx on public.auctions(seller_id);
 create index auctions_winner_idx on public.auctions(winner_id);
+
+-- Listing photos and private conversations
+insert into storage.buckets (id,name,public,file_size_limit,allowed_mime_types)
+values ('listing-photos','listing-photos',true,5242880,array['image/jpeg','image/png','image/webp']);
+create policy "AuctionHub own photo uploads" on storage.objects for insert to authenticated
+with check (bucket_id='listing-photos' and (storage.foldername(name))[1]=(select auth.uid())::text);
+create policy "AuctionHub own photo cleanup" on storage.objects for delete to authenticated
+using (bucket_id='listing-photos' and (storage.foldername(name))[1]=(select auth.uid())::text);
+create policy "AuctionHub own photo metadata" on storage.objects for select to authenticated
+using (bucket_id='listing-photos' and (storage.foldername(name))[1]=(select auth.uid())::text);
+create table public.conversations (
+id uuid primary key default gen_random_uuid(),
+auction_id uuid not null references public.auctions(id) on delete cascade,
+buyer_id uuid not null references auth.users(id) on delete cascade,
+seller_id uuid not null references auth.users(id) on delete cascade,
+created_at timestamptz not null default now(),
+unique(auction_id,buyer_id),check(buyer_id<>seller_id));
+create table public.messages (
+id uuid primary key default gen_random_uuid(),
+conversation_id uuid not null references public.conversations(id) on delete cascade,
+sender_id uuid not null references auth.users(id) on delete cascade,
+body text not null check(char_length(btrim(body)) between 1 and 2000),
+created_at timestamptz not null default now());
+alter table public.conversations enable row level security;
+alter table public.messages enable row level security;
+create policy "Participants read conversations" on public.conversations for select to authenticated
+using ((select auth.uid()) in (buyer_id,seller_id));
+create policy "Buyer starts listing conversation" on public.conversations for insert to authenticated
+with check (buyer_id=(select auth.uid()) and exists(select 1 from public.auctions a where a.id=auction_id and a.seller_id=conversations.seller_id));
+create policy "Participants read messages" on public.messages for select to authenticated
+using (exists(select 1 from public.conversations c where c.id=conversation_id and (select auth.uid()) in(c.buyer_id,c.seller_id)));
+create policy "Participants send own messages" on public.messages for insert to authenticated
+with check (sender_id=(select auth.uid()) and exists(select 1 from public.conversations c where c.id=conversation_id and (select auth.uid()) in(c.buyer_id,c.seller_id)));
+grant select,insert on public.conversations,public.messages to authenticated;
+revoke all on public.conversations,public.messages from anon;
+revoke update,delete on public.conversations,public.messages from authenticated;
+create index conversations_buyer_idx on public.conversations(buyer_id);
+create index conversations_seller_idx on public.conversations(seller_id);
+create index messages_conversation_time_idx on public.messages(conversation_id,created_at);
+create index messages_sender_idx on public.messages(sender_id);
