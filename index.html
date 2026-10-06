@@ -1656,3 +1656,30 @@ setInterval(()=>{if(!document.hidden&&activeConversation)loadMessages();},15000)
 
 </body>
 </html>
+<script>
+remaining = function(a) {
+  if (a.sold) return "SOLD · reserved for pickup";
+  const ms = a.endTime - Date.now();
+  if (ms <= 0) {
+    return a.winner_id
+      ? "SOLD · awaiting pickup"
+      : "Ended · no bids";
+  }
+  return Math.floor(ms / 3600000) + "h " +
+    Math.floor(ms % 3600000 / 60000) + "m " +
+    Math.floor(ms % 60000 / 1000) + "s";
+};
+
+const originalDetailsTimer = updateDetailsTimer;
+updateDetailsTimer = function() {
+  originalDetailsTimer();
+  const a = auctions[currentAuctionIndex];
+  if (!a) return;
+  const closed = a.sold || a.endTime <= Date.now();
+  el("detailsBid").disabled = closed;
+  el("bidButton").textContent = closed
+    ? (a.sold || a.winner_id ? "SOLD" : "Auction ended")
+    : "Place Bid";
+  if (closed) el("detailsBuyNow").innerHTML = "";
+};
+</script>
