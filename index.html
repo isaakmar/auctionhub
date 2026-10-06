@@ -1683,3 +1683,27 @@ updateDetailsTimer = function() {
   if (closed) el("detailsBuyNow").innerHTML = "";
 };
 </script>
+<script>
+const originalRender = renderAuctions;
+renderAuctions = function() {
+  originalRender();
+  auctions.forEach((a, i) => {
+    if (Number(a.buyNow) < Number(a.price)) {
+      const timer = el("timer-" + i);
+      timer?.closest(".auction-card")
+        ?.querySelector(".buy-button")?.remove();
+    }
+  });
+};
+
+const originalRefresh = refreshDetails;
+refreshDetails = function() {
+  originalRefresh();
+  const a = auctions[currentAuctionIndex];
+  if (a && Number(a.buyNow) < Number(a.price)) {
+    el("detailsBuyNow").innerHTML = "";
+  }
+};
+
+renderAuctions();
+</script>
