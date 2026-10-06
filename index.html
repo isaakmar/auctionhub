@@ -1944,3 +1944,37 @@ document.querySelector(".hero-content > h1 + p").textContent =
 
 document.querySelector(".about-image").hidden = true;
 </script>
+<script>
+const equipmentCategories = [
+  ["🚜", "Farm Equipment"],
+  ["🚗", "Cars & Vehicles"],
+  ["🛠️", "Tools"],
+  ["⚙️", "Parts"],
+  ["📦", "General Merchandise"],
+  ["💻", "Electronics"],
+  ["🏠", "Real Estate"],
+  ["🔨", "View All"]
+];
+
+const categoryGrid = document.querySelector(".category-grid");
+categoryGrid.replaceChildren();
+
+equipmentCategories.forEach(([icon, name]) => {
+  const card = document.createElement("button");
+  card.type = "button";
+  card.className = "category-card";
+  card.innerHTML =
+    '<div class="category-icon">' + icon + '</div>' +
+    '<h3>' + name + '</h3>';
+  card.onclick = () =>
+    chooseCategory(name === "View All" ? "All" : name);
+  categoryGrid.appendChild(card);
+});
+
+const categorySelect = document.getElementById("itemCategory");
+["Farm Equipment", "Tools", "Parts"].forEach(name => {
+  if (![...categorySelect.options].some(o => o.value === name)) {
+    categorySelect.add(new Option(name, name));
+  }
+});
+</script>
