@@ -1909,3 +1909,38 @@ body {
   box-shadow: 0 6px 20px #10223508;
 }
 </style>
+<style>
+body {
+  background: #f3f0e7;
+  color: #263329;
+}
+
+.hero {
+  background:
+    linear-gradient(90deg, #102018e6, #10201880),
+    url("https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1800&q=85")
+    center / cover;
+  min-height: 460px;
+}
+
+.navbar, .dark-section, footer {
+  background: #20372a;
+}
+
+.sell-section {
+  background: #e8e2d2;
+}
+</style>
+
+<script>
+document.querySelector(".hero-label").textContent =
+  "Ontario Farms · Vehicles · Tools";
+
+document.querySelector(".hero h1").textContent =
+  "Your next truck, tool or tractor starts here.";
+
+document.querySelector(".hero-content > h1 + p").textContent =
+  "Discover local auctions for farm equipment, vehicles, tools and more. Buy and sell across Ontario with local pickup.";
+
+document.querySelector(".about-image").hidden = true;
+</script>
