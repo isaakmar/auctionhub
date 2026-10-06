@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>AuctionHub — Trusted Online Auctions</title>
+<title>AuctionHub — Ontario Local Auctions</title>
 
 <style>
 * {
@@ -709,6 +709,9 @@ footer a {
 
 }
 
+
+.modal-content { max-height: 90vh; overflow-y: auto; }
+@media (max-width: 900px) { .nav-links { display: flex; } .nav-links a { display: none; } .nav-container { flex-wrap: wrap; } }
 </style>
 </head>
 
@@ -757,8 +760,9 @@ footer a {
 
   <div class="hero-content">
 
+    <p style="background:#171717;padding:12px;border:1px solid #c79a45">Preview: listings and bids are saved only in your browser. Shared auctions and secure accounts are not connected yet.</p>
     <div class="hero-label">
-      The Trusted Auction Marketplace
+      Ontario Local Auctions
     </div>
 
     <h1>
@@ -769,7 +773,7 @@ footer a {
     <p>
       Discover exceptional vehicles, collectibles,
       electronics, jewelry, art, real estate and more
-      from sellers around the world.
+      from sellers across Ontario. Local pickup, with no online payments.
     </p>
 
     <button
@@ -806,12 +810,13 @@ footer a {
       oninput="renderAuctions()"
     >
 
-    <button onclick="clearSearch()">
+    <button onclick="renderAuctions()">
       Search
     </button>
 
+    <input id="cityFilter" type="text" placeholder="Filter by Ontario city" aria-label="Filter by Ontario city" oninput="renderAuctions()">
+    <button onclick="clearSearch()">Clear filters</button>
   </div>
-
 </div>
 
 
@@ -987,8 +992,7 @@ footer a {
       <h3>Find an Auction</h3>
 
       <p>
-        Browse thousands of items across our
-        marketplace.
+        Browse Ontario listings and check the pickup city.
       </p>
 
     </div>
@@ -1035,8 +1039,7 @@ footer a {
       <h3>Complete Your Purchase</h3>
 
       <p>
-        Arrange payment and delivery with the
-        seller.
+        Arrange local pickup and payment directly with the seller. No online payments are processed here.
       </p>
 
     </div>
@@ -1207,6 +1210,9 @@ footer a {
       Create Auction
     </h2>
 
+
+    <label for="itemCity">Pickup city in Ontario</label>
+    <input id="itemCity" placeholder="For example: Toronto or London" maxlength="80">
 
     <input
       id="itemName"
@@ -1889,6 +1895,10 @@ function login() {
    RENDER AUCTIONS
 ========================= */
 
+function escapeText(value) {
+  return String(value).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;", "'":"&#39;"}[c]));
+}
+
 function renderAuctions() {
 
   const grid =
@@ -1904,6 +1914,7 @@ function renderAuctions() {
       .trim();
 
 
+  const city = document.getElementById("cityFilter").value.toLowerCase().trim();
   grid.innerHTML = "";
 
 
@@ -1926,7 +1937,7 @@ function renderAuctions() {
           .includes(search);
 
 
-      if (!matches) {
+      if (!matches || (city && !(auction.city || "").toLowerCase().includes(city))) {
         return;
       }
 
@@ -1992,6 +2003,7 @@ function renderAuctions() {
             ${auction.category}
           </div>
 
+          <p>${escapeText(auction.city || "Pickup city not provided")} · Ontario pickup</p>
           <h3>
             ${auction.name}
           </h3>
@@ -2282,6 +2294,8 @@ function placeBid() {
   }
 
 
+  if (auction.endTime <= Date.now()) { alert("This auction has ended."); return; }
+
   const bid =
     Number(
       document.getElementById(
@@ -2359,6 +2373,8 @@ function buyNow(index) {
   }
 
 
+  if (auction.endTime <= Date.now()) { alert("This auction has ended."); return; }
+
   const confirmed =
     confirm(
       "Buy " +
@@ -2382,7 +2398,7 @@ function buyNow(index) {
 
 
   alert(
-    "Purchase successful! 🔴 SOLD"
+    "Item marked sold in this browser. No payment was processed."
   );
 
 
@@ -2406,6 +2422,8 @@ function buyNow(index) {
 ========================= */
 
 function createAuction() {
+  const city = document.getElementById("itemCity").value.trim();
+  if (!city) { alert("Please enter your pickup city in Ontario."); return; }
 
   const name =
     document.getElementById(
@@ -2459,6 +2477,7 @@ function createAuction() {
 
 
   auctions.unshift({
+    city: city,
 
     name:
       name,
@@ -2493,6 +2512,7 @@ function createAuction() {
   saveAuctions();
 
 
+  document.getElementById("itemCity").value = "";
   document.getElementById(
     "itemName"
   ).value = "";
@@ -2558,6 +2578,7 @@ function chooseCategory(category) {
 ========================= */
 
 function clearSearch() {
+  document.getElementById("cityFilter").value = "";
 
   document.getElementById(
     "searchInput"
