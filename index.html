@@ -1707,3 +1707,46 @@ refreshDetails = function() {
 
 renderAuctions();
 </script>
+<script>
+const beforeDeleteRefresh = refreshDetails;
+refreshDetails = function() {
+  beforeDeleteRefresh();
+  let button = el("deleteListingButton");
+  if (!button) {
+    button = document.createElement("button");
+    button.id = "deleteListingButton";
+    button.textContent = "Delete my listing";
+    button.style.cssText =
+      "background:#b00000;color:white;padding:12px;margin-top:12px";
+    button.onclick = deleteMyListing;
+    el("detailsBuyNow").after(button);
+  }
+  const a = auctions[currentAuctionIndex];
+  button.hidden = !a || !signedUser ||
+    a.seller_id !== signedUser.id;
+};
+
+async function deleteMyListing() {
+  const a = auctions[currentAuctionIndex];
+  if (!a || !signedUser ||
+      a.seller_id !== signedUser.id) return;
+  if (!confirm("Delete " + a.name +
+      "? Its bids and listing messages will also be removed.")) return;
+
+  const button = el("deleteListingButton");
+  button.disabled = true;
+  try {
+    const {error} = await db.rpc("delete_listing", {
+      p_auction_id: a.id
+    });
+    if (error) throw error;
+    closeDetails();
+    await loadAuctions();
+    alert("Listing deleted.");
+  } catch (error) {
+    alert(error.message);
+  } finally {
+    button.disabled = false;
+  }
+}
+</script>
