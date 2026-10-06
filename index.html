@@ -713,6 +713,33 @@ footer a {
 .modal-content { max-height: 90vh; overflow-y: auto; }
 @media (max-width: 900px) { .nav-links { display: flex; } .nav-links a { display: none; } .nav-container { flex-wrap: wrap; } }
 </style>
+<style>
+body{font-family:Arial,Helvetica,sans-serif;background:#f5f7fa;color:#182332}
+.navbar{background:#142334;border-bottom:0;box-shadow:0 2px 12px #0002}
+.logo{font-family:Georgia,serif}.nav-button,.primary-button{border-radius:9px}
+button{min-height:44px}button:disabled{opacity:.5;cursor:not-allowed}
+input:focus,textarea:focus,select:focus,button:focus-visible{outline:3px solid #3484c7;outline-offset:2px}
+.hero{min-height:430px;background:linear-gradient(120deg,#142334,#254765)}
+.hero h1{font-size:clamp(36px,6vw,64px);max-width:720px}
+.hero-content{padding:48px 22px}.hero p{font-size:17px}
+.section{padding:48px 22px}.section-heading{text-align:left;margin-bottom:26px}
+.section-heading h2{font-size:32px}.section-heading p{margin:0}
+.auction-card{border:1px solid #dce3eb;border-radius:16px;box-shadow:0 4px 18px #14233408}
+.auction-content{padding:20px}.auction-card h3{font-size:23px}.auction-description{min-height:0;margin:10px 0}
+.auction-image{height:240px}.bid-row{align-items:center;gap:14px}
+.card-buttons button{border-radius:8px}.timer{color:#46556a}
+.search-area{border-color:#dce3eb}.search-container{flex-wrap:wrap}
+.search-container input{min-width:180px;border-radius:9px}
+.modal-content{border-radius:16px;padding:25px}.modal-content input{border-radius:8px}
+.category-card,.sell-box,.contact-form,.contact-info{border-radius:14px}
+.market-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 24px}
+.market-tabs button{padding:10px 18px;border:1px solid #cdd7e3;border-radius:24px;background:white;color:#27394d}
+.market-tabs button[aria-pressed="true"]{background:#142334;color:white;border-color:#142334}
+.status-label{display:inline-block;padding:6px 10px;border-radius:20px;background:#e8f4ed;color:#216144;font-size:12px;font-weight:700;margin-bottom:10px}
+.status-label.closed{background:#eef0f4;color:#526174}
+#listingSummary{font-size:14px;color:#526174;margin-bottom:16px}
+@media(max-width:600px){.hero{min-height:0}.hero-content{padding:34px 18px}.section{padding:34px 18px}.nav-container{gap:10px}.nav-links{gap:6px}.nav-button{padding:8px 12px}.auction-grid{gap:18px}.search-container{padding:18px}.bid-price{font-size:26px}}
+</style>
 </head>
 
 <body>
@@ -843,6 +870,10 @@ footer a {
   </div>
 
 
+  <div class="market-tabs" aria-label="Listing views">
+<button id="allListingsTab" onclick="setListingView('all')" aria-pressed="true">All listings</button>
+<button id="myListingsTab" onclick="setListingView('mine')" aria-pressed="false">My Listings</button>
+</div><p id="listingSummary" role="status"></p>
   <div
     class="auction-grid"
     id="auctionGrid"
@@ -1749,4 +1780,64 @@ async function deleteMyListing() {
     button.disabled = false;
   }
 }
+</script>
+
+<script>
+let listingView = "all";
+function setListingView(view) {
+  if (view === "mine" && !signedIn()) return;
+  listingView = view;
+  el("allListingsTab").setAttribute("aria-pressed", String(view === "all"));
+  el("myListingsTab").setAttribute("aria-pressed", String(view === "mine"));
+  renderAuctions();
+  scrollToAuctions();
+}
+const professionalRenderBase = renderAuctions;
+renderAuctions = function() {
+  professionalRenderBase();
+  let visible = 0;
+  auctions.forEach((a,i) => {
+    const card = el("timer-" + i)?.closest(".auction-card");
+    if (!card) return;
+    if (listingView === "mine" && (!signedUser || a.seller_id !== signedUser.id)) {
+      card.remove();
+      return;
+    }
+    visible++;
+    const closed = a.sold || a.endTime <= Date.now();
+    const badge = document.createElement("span");
+    badge.className = "status-label" + (closed ? " closed" : "");
+    badge.textContent = a.sold ? "SOLD · RESERVED" :
+      a.endTime <= Date.now() ? (a.winner_id ? "SOLD · AWAITING PICKUP" : "ENDED · NO BIDS") : "ACTIVE AUCTION";
+    card.querySelector(".auction-content").prepend(badge);
+  });
+  el("listingSummary").textContent = visible + (visible === 1 ? " listing" : " listings") +
+    (listingView === "mine" ? " · Your items · Open View Details to manage a listing" : " · Ontario local pickup · CAD");
+  el("noAuctions").classList.toggle("hidden", visible !== 0);
+  if (listingView === "mine" && !visible) el("noAuctions").textContent =
+    signedUser ? "No matching listings of your own. Clear filters or choose Sell an Item." : "Sign in to view your listings.";
+};
+const professionalAccountBase = updateAccount;
+updateAccount = function(user) {
+  professionalAccountBase(user);
+  if (!user && listingView === "mine") {
+    listingView = "all";
+    el("allListingsTab").setAttribute("aria-pressed","true");
+    el("myListingsTab").setAttribute("aria-pressed","false");
+  }
+  renderAuctions();
+};
+renderAuctions();
+setInterval(() => {
+  document.querySelectorAll(".auction-card").forEach(card => {
+    const timer = card.querySelector('[id^="timer-"]');
+    const a = auctions[Number(timer?.id.slice(6))];
+    const badge = card.querySelector(".status-label");
+    if (!a || !badge) return;
+    const closed = a.sold || a.endTime <= Date.now();
+    badge.classList.toggle("closed", closed);
+    badge.textContent = a.sold ? "SOLD · RESERVED" :
+      a.endTime <= Date.now() ? (a.winner_id ? "SOLD · AWAITING PICKUP" : "ENDED · NO BIDS") : "ACTIVE AUCTION";
+  });
+},1000);
 </script>
