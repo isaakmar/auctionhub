@@ -1635,9 +1635,9 @@ async function createAuction(){
  if(!signedIn())return;const name=el('itemName').value.trim(),city=el('itemCity').value.trim(),category=el('itemCategory').value,price=Number(el('startingBid').value),buy=Number(el('buyNowPrice').value),description=el('itemDescription').value.trim(),rawImage=el('itemImage').value.trim();
  if(!name||name.length>140||!city||city.length>80||!category||!Number.isFinite(price)||price<=0||!Number.isFinite(buy)||buy<0||(buy&&buy<price)||description.length>4000){alert('Enter an item, Ontario pickup city, category and valid prices. Reservation price must be at least the starting bid.');return;}
  if(rawImage&&!imageUrl(rawImage)){alert('Use a valid HTTPS photo URL.');return;}
- const files=Array.from(el('itemPhoto').files);if(files.length+(rawImage?1:0)>6){alert('Choose up to 6 photos total, including any photo URL.');return;}if(files.some(file=>!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>5242880)){alert('Each photo must be JPG, PNG or WebP and no larger than 5 MB.');return;}
+ const files=Array.from(el('itemPhoto').files);if(files.length+(rawImage?1:0)>6){alert('Choose up to 6 photos total, including any photo URL.');return;}if(files.some(file=>!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>41943040)){alert('Choose JPG, PNG or WebP photos up to 40 MB each. Photos will be resized automatically.');return;}
  el('createButton').disabled=true;const uploadedPaths=[];
- try{const photos=rawImage?[imageUrl(rawImage)]:[];for(const file of files){const ext={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'}[file.type];const path=signedUser.id+'/'+crypto.randomUUID()+'.'+ext;const result=await db.storage.from('listing-photos').upload(path,file,{contentType:file.type,upsert:false});if(result.error)throw result.error;uploadedPaths.push(path);photos.push(db.storage.from('listing-photos').getPublicUrl(path).data.publicUrl);}const photo=photos[0]||'';const {error}=await db.from('auctions').insert({seller_id:signedUser.id,seller_name:String(signedUser.user_metadata.display_name||'Ontario seller').slice(0,80),name,city,category,price,buy_now:buy||null,description,image_url:photo,image_urls:photos,end_time:new Date(Date.now()+300000).toISOString()});if(error)throw error;
+ try{const photos=rawImage?[imageUrl(rawImage)]:[];for(const originalFile of files){const file=await resizeListingPhoto(originalFile);const ext={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'}[file.type];const path=signedUser.id+'/'+crypto.randomUUID()+'.'+ext;const result=await db.storage.from('listing-photos').upload(path,file,{contentType:file.type,upsert:false});if(result.error)throw result.error;uploadedPaths.push(path);photos.push(db.storage.from('listing-photos').getPublicUrl(path).data.publicUrl);}const photo=photos[0]||'';const {error}=await db.from('auctions').insert({seller_id:signedUser.id,seller_name:String(signedUser.user_metadata.display_name||'Ontario seller').slice(0,80),name,city,category,price,buy_now:buy||null,description,image_url:photo,image_urls:photos,end_time:new Date(Date.now()+300000).toISOString()});if(error)throw error;
  ['itemName','itemCity','itemCategory','startingBid','buyNowPrice','itemImage','itemPhoto','itemDescription'].forEach(id=>el(id).value='');clearSearch();await loadAuctions();scrollToAuctions();alert('Your listing is saved and visible to other visitors.');}catch(e){if(uploadedPaths.length)await db.storage.from('listing-photos').remove(uploadedPaths);alert(e.message);}finally{el('createButton').disabled=false;}
 }
 function chooseCategory(c){el('searchInput').value=c==='All'?'':c;renderAuctions();scrollToAuctions();}
@@ -2026,4 +2026,89 @@ refreshDetails = function() {
     gallery.appendChild(button);
   });
 };
+</script>
+
+<style>
+.card-gallery{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;position:relative;touch-action:pan-x pan-y}
+.card-gallery::-webkit-scrollbar{display:none}
+.card-gallery img{flex:0 0 100%;width:100%;height:240px;object-fit:cover;scroll-snap-align:start}
+.gallery-controls{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#f5f7f3}
+.gallery-controls button{background:#20372a;color:white;border:0;border-radius:7px;padding:4px 14px}
+.gallery-controls span{font-size:13px;color:#344737}
+</style>
+<script>
+async function resizeListingPhoto(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((resolve,reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = () => reject(new Error("Could not read " + file.name + ". Choose a JPG, PNG or WebP photo."));
+      image.src = url;
+    });
+    const scale = Math.min(1,1600/Math.max(img.naturalWidth,img.naturalHeight));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1,Math.round(img.naturalWidth*scale));
+    canvas.height = Math.max(1,Math.round(img.naturalHeight*scale));
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(img,0,0,canvas.width,canvas.height);
+    const blob = await new Promise(resolve => canvas.toBlob(resolve,"image/jpeg",0.82));
+    if (!blob || blob.size > 5242880) throw new Error("Could not resize " + file.name + ". Please choose another photo.");
+    return new File([blob],file.name.replace(/\.[^.]+$/,"")+".jpg",{type:"image/jpeg"});
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+photoHelp.textContent = "Choose up to 6 photos. Large phone photos shrink automatically before upload.";
+const swipeRenderBase = renderAuctions;
+renderAuctions = function() {
+  swipeRenderBase();
+  auctions.forEach((a,i) => {
+    const card = el("timer-"+i)?.closest(".auction-card");
+    if (!card) return;
+    const photos = [...new Set([a.image,...(a.image_urls||[])].map(imageUrl).filter(Boolean))];
+    if (photos.length < 2) return;
+    const cover = card.querySelector(".auction-image");
+    if (!cover) return;
+    const gallery = document.createElement("div");
+    gallery.className = "card-gallery";
+    gallery.setAttribute("aria-label",a.name+" photos");
+    photos.forEach((url,n) => {
+      const img = document.createElement("img");
+      img.src = url;
+      img.alt = a.name+" · photo "+(n+1);
+      img.loading = "lazy";
+      gallery.appendChild(img);
+    });
+    cover.replaceWith(gallery);
+    const controls = document.createElement("div");
+    controls.className = "gallery-controls";
+    const previous = document.createElement("button");
+    previous.type = "button";
+    previous.textContent = "‹";
+    previous.setAttribute("aria-label","Previous photo");
+    const count = document.createElement("span");
+    count.textContent = "1 / "+photos.length+" · Swipe photos";
+    const next = document.createElement("button");
+    next.type = "button";
+    next.textContent = "›";
+    next.setAttribute("aria-label","Next photo");
+    let current = 0;
+    function move(delta) {
+      current = (current+delta+photos.length)%photos.length;
+      gallery.scrollTo({left:current*gallery.clientWidth,behavior:"smooth"});
+    }
+    previous.onclick = () => move(-1);
+    next.onclick = () => move(1);
+    gallery.addEventListener("scroll",() => {
+      current = Math.round(gallery.scrollLeft/Math.max(1,gallery.clientWidth));
+      count.textContent = (current+1)+" / "+photos.length+" · Swipe photos";
+    },{passive:true});
+    controls.append(previous,count,next);
+    gallery.after(controls);
+  });
+};
+renderAuctions();
 </script>
