@@ -2568,3 +2568,30 @@ sendMessage = function () {
 document.getElementById("itemCity").placeholder =
   "Type in your city";
 </script>
+<script>
+(function () {
+  const oldField = document.getElementById("itemDescription");
+  const description = document.createElement("textarea");
+
+  description.id = "itemDescription";
+  description.value = oldField.value;
+  description.rows = 7;
+  description.maxLength = 4000;
+  description.placeholder =
+    "Describe your product: condition, size, features, " +
+    "what is included, and any damage or problems.";
+  description.style.cssText =
+    "width:100%;padding:12px;margin-bottom:12px;" +
+    "border:1px solid #bbb;border-radius:8px;" +
+    "font:inherit;resize:vertical";
+
+  const label = document.createElement("label");
+  label.htmlFor = "itemDescription";
+  label.textContent = "Product description";
+  label.style.cssText =
+    "display:block;font-weight:bold;margin-bottom:6px";
+
+  oldField.before(label);
+  oldField.replaceWith(description);
+})();
+</script>
