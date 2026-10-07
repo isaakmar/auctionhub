@@ -1284,11 +1284,7 @@ input:focus,textarea:focus,select:focus,button:focus-visible{outline:3px solid #
       </h3>
 
       <p>
-        Support contact is being prepared.
-      </p>
-
-      <p>
-        No phone support is connected yet.
+        For technical support, send us a message below.
       </p>
 
       <p>
@@ -2365,109 +2361,4 @@ setInterval(() => {
   });
 },1000);
 renderAuctions();
-</script>
-<script>
-const renameBidRender = renderAuctions;
-renderAuctions = function() {
-  renameBidRender();
-  document.querySelectorAll(".card-buttons button").forEach(button => {
-    if (button.textContent === "Bid") {
-      button.textContent = "Place a Bid";
-    }
-  });
-};
-renderAuctions();
-</script>
-<style>
-#detailsBuyNow {
-  display: none !important;
-}
-</style>
-<script>
-let myBidItems = new Set();
-
-async function loadMyBidStatus() {
-  const userId = signedUser?.id;
-  if (!userId) {
-    myBidItems.clear();
-    showMyBidStatus();
-    return;
-  }
-
-  const {data, error} = await db.from("bids")
-    .select("auction_id")
-    .eq("bidder_id", userId);
-
-  if (signedUser?.id !== userId) return;
-  if (error) return;
-
-  myBidItems = new Set(data.map(b => b.auction_id));
-  showMyBidStatus();
-}
-
-function showMyBidStatus() {
-  auctions.forEach((a, i) => {
-    const timer = el("timer-" + i);
-    if (!timer) return;
-
-    let status = timer.parentElement
-      .querySelector(".my-bid-status");
-
-    if (!status) {
-      status = document.createElement("div");
-      status.className = "my-bid-status";
-      status.style.cssText =
-        "font-size:13px;font-weight:bold;margin-top:6px";
-      timer.after(status);
-    }
-
-    status.textContent = "";
-    if (!signedUser || !myBidItems.has(a.id)) return;
-
-    const winning = a.winner_id === signedUser.id;
-    const ended = a.sold || a.endTime <= Date.now();
-
-    status.textContent = winning
-      ? (ended ? "You won this item" : "You're the highest bidder")
-      : (ended ? "You didn't win this auction" : "You've been outbid");
-
-    status.style.color = winning ? "#216144" : "#a00000";
-  });
-}
-
-const bidStatusRender = renderAuctions;
-renderAuctions = function() {
-  bidStatusRender();
-  showMyBidStatus();
-};
-
-const bidStatusAccount = updateAccount;
-updateAccount = function(user) {
-  myBidItems.clear();
-  bidStatusAccount(user);
-  loadMyBidStatus();
-};
-
-loadMyBidStatus();
-setInterval(() => {
-  if (!document.hidden) loadMyBidStatus();
-}, 15000);
-setInterval(showMyBidStatus, 1000);
-</script>
-<script>
-const pickupRemaining = remaining;
-remaining = function(a) {
-  return a.sold ? "Ready for pickup" : pickupRemaining(a);
-};
-
-function updateSoldLabels() {
-  document.querySelectorAll(".status-label").forEach(label => {
-    if (label.textContent === "SOLD · RESERVED") {
-      label.textContent = "SOLD ITEM";
-    }
-  });
-}
-
-updateSoldLabels();
-setInterval(updateSoldLabels, 1000);
 </script>
