@@ -2362,3 +2362,39 @@ setInterval(() => {
 },1000);
 renderAuctions();
 </script>
+<script>
+sendMessage = function () {
+  const name = el("contactName");
+  const email = el("contactEmail");
+  const message = el("contactMessage");
+
+  name.required = email.required = message.required = true;
+
+  for (const field of [name, email, message]) {
+    if (!field.reportValidity()) return;
+  }
+
+  const form = document.createElement("form");
+  form.method = "POST";
+  form.action = "https://formsubmit.co/isaakmartens19@gmail.com";
+
+  const values = {
+    name: name.value.trim(),
+    email: email.value.trim(),
+    message: message.value.trim(),
+    _subject: "AuctionHub technical support",
+    _next: "https://isaakmar.github.io/auctionhub/#contact"
+  };
+
+  for (const [key, value] of Object.entries(values)) {
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = key;
+    input.value = value;
+    form.appendChild(input);
+  }
+
+  document.body.appendChild(form);
+  form.submit();
+};
+</script>
