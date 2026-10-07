@@ -2201,3 +2201,94 @@ window.addEventListener("keydown", event => {
   }
 }, true);
 </script>
+
+<script>
+let editingListingId = null;
+const editPanel = document.createElement("div");
+editPanel.id = "listingEditor";
+editPanel.hidden = true;
+editPanel.innerHTML = '<h3>Edit your listing</h3><label for="editDescription">Product description</label><textarea id="editDescription" maxlength="4000" rows="6" style="width:100%;padding:12px"></textarea><p id="editPhotoCount"></p><label for="editPhotos">Add photos</label><input id="editPhotos" type="file" multiple accept="image/jpeg,image/png,image/webp"><p id="editStatus" role="status"></p><button id="saveListingEdit" type="button">Save changes</button><button id="cancelListingEdit" type="button">Cancel</button>';
+el("detailsModal").querySelector(".modal-content").appendChild(editPanel);
+const editRefreshBase = refreshDetails;
+refreshDetails = function() {
+  editRefreshBase();
+  const a = auctions[currentAuctionIndex];
+  let button = el("editListingButton");
+  if (!button) {
+    button = document.createElement("button");
+    button.id = "editListingButton";
+    button.type = "button";
+    button.textContent = "Edit listing";
+    button.style.cssText = "padding:12px;margin:12px 8px 0 0;background:#20372a;color:white;border:0;border-radius:8px";
+    button.onclick = openListingEditor;
+    el("deleteListingButton").before(button);
+  }
+  button.hidden = !a || !signedUser || a.seller_id !== signedUser.id;
+};
+function existingPhotoCount(a) {
+  return a.image_urls?.length || (a.image ? 1 : 0);
+}
+function openListingEditor() {
+  const a = auctions[currentAuctionIndex];
+  if (!a || !signedUser || a.seller_id !== signedUser.id) return;
+  editingListingId = a.id;
+  el("editDescription").value = a.description;
+  el("editPhotos").value = "";
+  el("editStatus").textContent = "";
+  el("editPhotoCount").textContent = existingPhotoCount(a) + " of 6 photo slots used. Large photos resize automatically.";
+  editPanel.hidden = false;
+  el("editDescription").focus();
+}
+el("cancelListingEdit").onclick = () => {editPanel.hidden=true;editingListingId=null;};
+const editCloseBase = closeDetails;
+closeDetails = function() {
+  editPanel.hidden = true;
+  editingListingId = null;
+  editCloseBase();
+};
+el("saveListingEdit").onclick = async function() {
+  const id = editingListingId;
+  const a = auctions.find(item => item.id === id);
+  if (!a || !signedUser || a.seller_id !== signedUser.id) return;
+  const description = el("editDescription").value;
+  const files = [...el("editPhotos").files];
+  if (existingPhotoCount(a)+files.length>6) {
+    el("editStatus").textContent = "Only " + (6-existingPhotoCount(a)) + " photo slots remain.";
+    return;
+  }
+  if (files.some(f => !["image/jpeg","image/png","image/webp"].includes(f.type) || f.size>41943040)) {
+    el("editStatus").textContent = "Choose JPG, PNG or WebP photos up to 40 MB each.";
+    return;
+  }
+  const paths = [],urls = [];
+  this.disabled = true;
+  el("cancelListingEdit").disabled = true;
+  let saved = false;
+  try {
+    el("editStatus").textContent = "Saving your changes…";
+    for (const original of files) {
+      const file = await resizeListingPhoto(original);
+      const path = signedUser.id+"/"+crypto.randomUUID()+".jpg";
+      const result = await db.storage.from("listing-photos").upload(path,file,{contentType:"image/jpeg",upsert:false});
+      if (result.error) throw result.error;
+      paths.push(path);
+      urls.push(db.storage.from("listing-photos").getPublicUrl(path).data.publicUrl);
+    }
+    const {error} = await db.rpc("edit_listing",{p_auction_id:id,p_description:description,p_new_photos:urls});
+    if (error) throw error;
+    saved = true;
+    await loadAuctions();
+    if (editingListingId===id) {
+      editPanel.hidden = true;
+      editingListingId = null;
+      alert("Your listing changes are saved.");
+    }
+  } catch(error) {
+    if (!saved && paths.length) await db.storage.from("listing-photos").remove(paths);
+    el("editStatus").textContent = error.message;
+  } finally {
+    this.disabled = false;
+    el("cancelListingEdit").disabled = false;
+  }
+};
+</script>
