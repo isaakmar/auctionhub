@@ -2366,3 +2366,15 @@ setInterval(() => {
 },1000);
 renderAuctions();
 </script>
+<script>
+const renameBidRender = renderAuctions;
+renderAuctions = function() {
+  renameBidRender();
+  document.querySelectorAll(".card-buttons button").forEach(button => {
+    if (button.textContent === "Bid") {
+      button.textContent = "Place a Bid";
+    }
+  });
+};
+renderAuctions();
+</script>
