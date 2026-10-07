@@ -2454,3 +2454,20 @@ setInterval(() => {
 }, 15000);
 setInterval(showMyBidStatus, 1000);
 </script>
+<script>
+const pickupRemaining = remaining;
+remaining = function(a) {
+  return a.sold ? "Ready for pickup" : pickupRemaining(a);
+};
+
+function updateSoldLabels() {
+  document.querySelectorAll(".status-label").forEach(label => {
+    if (label.textContent === "SOLD · RESERVED") {
+      label.textContent = "SOLD ITEM";
+    }
+  });
+}
+
+updateSoldLabels();
+setInterval(updateSoldLabels, 1000);
+</script>
