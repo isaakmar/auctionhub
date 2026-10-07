@@ -2430,3 +2430,63 @@ sendMessage = function () {
   el("createButton").before(notice);
 })();
 </script>
+<script>
+(function () {
+  let account = null, busy = false, ready = false;
+  let seen = new Set(), target = null;
+
+  const popup = document.createElement("div");
+  popup.hidden = true;
+  popup.style.cssText =
+    "position:fixed;bottom:20px;left:5%;width:90%;max-width:460px;" +
+    "z-index:4500;background:white;color:#20372a;padding:18px;" +
+    "border:2px solid #c79a45;border-radius:12px;box-shadow:0 5px 25px #0004";
+  popup.setAttribute("role","status");
+
+  const text = document.createElement("p");
+  const open = document.createElement("button");
+  open.textContent = "Open message";
+  const close = document.createElement("button");
+  close.textContent = "Dismiss";
+  open.style.cssText = close.style.cssText =
+    "padding:10px;margin:8px 8px 0 0";
+
+  popup.append(text,open,close);
+  document.body.appendChild(popup);
+  close.onclick = () => { popup.hidden = true; };
+
+  open.onclick = async () => {
+    const id = target;
+    popup.hidden = true;
+    if (!signedUser || !id) return;
+    await openInbox();
+    if (conversations.some(c => c.id === id)) {
+      await selectConversation(id);
+    }
+  };
+
+  function reset() {
+    account = signedUser?.id || null;
+    ready = false;
+    seen = new Set();
+    target = null;
+    popup.hidden = true;
+    text.textContent = "";
+  }
+
+  const accountBase = updateAccount;
+  updateAccount = function(user) {
+    accountBase(user);
+    if (account !== (user?.id || null)) reset();
+  };
+  reset();
+
+  async function checkMessages() {
+    if (busy || !signedUser || document.hidden) return;
+    if (account !== signedUser.id) reset();
+    const userId = account;
+    busy = true;
+
+    try {
+      const {data,error} = await db.from("messages")
+        .select("id,conversation_id,sender_id,body
