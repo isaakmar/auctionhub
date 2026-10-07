@@ -2595,3 +2595,14 @@ document.getElementById("itemCity").placeholder =
   oldField.replaceWith(description);
 })();
 </script>
+<script>
+(function () {
+  const description = document.getElementById("itemDescription");
+  const label = document.querySelector(
+    'label[for="itemDescription"]'
+  );
+  const category = document.getElementById("itemCategory");
+
+  category.before(label, description);
+})();
+</script>
