@@ -2432,31 +2432,32 @@ sendMessage = function () {
 </script>
 <script>
 (function () {
-  let account = null, busy = false, ready = false;
-  let seen = new Set(), target = null;
+  let user = null, ready = false, busy = false;
+  let seen = new Set(), conversation = null;
 
   const popup = document.createElement("div");
   popup.hidden = true;
   popup.style.cssText =
-    "position:fixed;bottom:20px;left:5%;width:90%;max-width:460px;" +
-    "z-index:4500;background:white;color:#20372a;padding:18px;" +
-    "border:2px solid #c79a45;border-radius:12px;box-shadow:0 5px 25px #0004";
-  popup.setAttribute("role","status");
+    "position:fixed;bottom:20px;left:5%;width:90%;" +
+    "max-width:460px;z-index:4500;background:white;" +
+    "color:#20372a;padding:18px;border:2px solid #c79a45;" +
+    "border-radius:12px;box-shadow:0 5px 25px #0004";
+  popup.setAttribute("role", "status");
 
   const text = document.createElement("p");
   const open = document.createElement("button");
+  const dismiss = document.createElement("button");
   open.textContent = "Open message";
-  const close = document.createElement("button");
-  close.textContent = "Dismiss";
-  open.style.cssText = close.style.cssText =
+  dismiss.textContent = "Dismiss";
+  open.style.cssText = dismiss.style.cssText =
     "padding:10px;margin:8px 8px 0 0";
 
-  popup.append(text,open,close);
+  popup.append(text, open, dismiss);
   document.body.appendChild(popup);
-  close.onclick = () => { popup.hidden = true; };
+  dismiss.onclick = () => { popup.hidden = true; };
 
   open.onclick = async () => {
-    const id = target;
+    const id = conversation;
     popup.hidden = true;
     if (!signedUser || !id) return;
     await openInbox();
@@ -2466,27 +2467,64 @@ sendMessage = function () {
   };
 
   function reset() {
-    account = signedUser?.id || null;
+    user = signedUser?.id || null;
     ready = false;
-    seen = new Set();
-    target = null;
-    popup.hidden = true;
+    seen.clear();
+    conversation = null;
     text.textContent = "";
+    popup.hidden = true;
   }
 
-  const accountBase = updateAccount;
-  updateAccount = function(user) {
-    accountBase(user);
-    if (account !== (user?.id || null)) reset();
+  const previousAccount = updateAccount;
+  updateAccount = function (account) {
+    previousAccount(account);
+    if (user !== (account?.id || null)) reset();
   };
   reset();
 
-  async function checkMessages() {
+  async function check() {
     if (busy || !signedUser || document.hidden) return;
-    if (account !== signedUser.id) reset();
-    const userId = account;
+    if (user !== signedUser.id) reset();
+    const checkingUser = user;
     busy = true;
 
     try {
-      const {data,error} = await db.from("messages")
-        .select("id,conversation_id,sender_id,body
+      const { data, error } = await db.from("messages")
+        .select("id,conversation_id,sender_id,body")
+        .order("created_at", { ascending: false })
+        .limit(100);
+
+      if (error || signedUser?.id !== checkingUser) return;
+
+      const incoming = data.filter(message =>
+        !seen.has(message.id) &&
+        message.sender_id !== checkingUser
+      );
+      seen = new Set(data.map(message => message.id));
+
+      if (!ready) {
+        ready = true;
+        return;
+      }
+      if (!incoming.length) return;
+
+      const message = incoming[0];
+      conversation = message.conversation_id;
+      text.textContent = "New message: " + message.body;
+      popup.hidden = false;
+
+      if (activeConversation === conversation &&
+          el("inboxModal").style.display === "flex") {
+        await loadMessages();
+      }
+    } finally {
+      busy = false;
+    }
+  }
+
+  const refresh = () => check().catch(() => {});
+  refresh();
+  setInterval(refresh, 3000);
+  document.addEventListener("visibilitychange", refresh);
+})();
+</script>
