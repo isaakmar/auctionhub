@@ -1619,18 +1619,18 @@ function renderAuctions(){
  el('auctionGrid').innerHTML='';let visible=0;
  auctions.forEach((a,index)=>{if(![a.name,a.category,a.description].some(v=>String(v).toLowerCase().includes(search))||!a.city.toLowerCase().includes(city))return;visible++;
  const ended=a.endTime<=Date.now(); const card=document.createElement('div');card.className='auction-card';
- card.innerHTML=`${a.image?`<img class="auction-image" src="${escapeText(a.image)}" alt="${escapeText(a.name)}" loading="lazy">`:'<div class="auction-image" style="display:grid;place-items:center;background:#ebe5d8">No photo provided</div>'}<div class="auction-content"><div class="auction-category">${escapeText(a.category)}</div><p>${escapeText(a.city)} · Ontario pickup</p><h3>${escapeText(a.name)}</h3><p class="auction-description">${escapeText(a.description)}</p><p>Seller: ${escapeText(a.seller_name)}</p><div class="bid-row"><div><div class="bid-label">CURRENT BID (CAD)</div><div class="bid-price">${money(a.price)}</div></div><div class="timer" id="timer-${index}"></div></div><div class="card-buttons"><button onclick="openDetails(${index})">View Details</button>${!a.sold&&!ended&&a.buyNow?`<button class="buy-button" onclick="buyNow(${index})">Reserve ${money(a.buyNow)}</button>`:''}</div></div>`;
+ card.innerHTML=`${a.image?`<img class="auction-image" src="${escapeText(a.image)}" alt="${escapeText(a.name)}" loading="lazy">`:'<div class="auction-image" style="display:grid;place-items:center;background:#ebe5d8">No photo provided</div>'}<div class="auction-content"><div class="auction-category">${escapeText(a.category)}</div><p>${escapeText(a.city)} · Ontario pickup</p><h3>${escapeText(a.name)}</h3><p class="auction-description">${escapeText(a.description)}</p><p>Seller: ${escapeText(a.seller_name)}</p><div class="bid-row"><div><div class="bid-label">CURRENT BID (CAD)</div><div class="bid-price">${money(a.price)}</div></div><div class="timer" id="timer-${index}"></div></div><div class="card-buttons"><button onclick="openDetails(${index})">View Details</button>${!a.sold&&!ended&&a.buyNow?`<button class="buy-button" onclick="buyNow(${index})">Buy It Now ${money(a.buyNow)}</button>`:''}</div></div>`;
  el('auctionGrid').appendChild(card);updateTimer(index);
  });el('noAuctions').textContent=auctions.length?'No auctions match your search.':'No listings yet. Sign in to create the first Ontario listing.';el('noAuctions').classList.toggle('hidden',visible!==0);
 }
 function remaining(a){if(a.sold)return 'Reserved · no online payment';const ms=a.endTime-Date.now();if(ms<=0)return 'Auction ended';return Math.floor(ms/86400000)+'d '+Math.floor(ms%86400000/3600000)+'h '+Math.floor(ms%3600000/60000)+'m '+Math.floor(ms%60000/1000)+'s';}
 function updateTimer(i){if(el('timer-'+i))el('timer-'+i).textContent=remaining(auctions[i]);}
 function updateDetailsTimer(){if(currentAuctionIndex!==null&&auctions[currentAuctionIndex]){el('detailsTimer').textContent=remaining(auctions[currentAuctionIndex]);el('bidButton').disabled=auctions[currentAuctionIndex].sold||auctions[currentAuctionIndex].endTime<=Date.now();}}
-function refreshDetails(){const a=auctions[currentAuctionIndex];if(!a)return;el('detailsImage').hidden=!a.image;if(a.image)el('detailsImage').src=a.image;el('detailsTitle').textContent=a.name;el('detailsCategory').textContent=a.category+' · '+a.city+', Ontario · Seller: '+a.seller_name;el('detailsDescription').textContent=a.description;el('detailsPrice').textContent=Number(a.price).toFixed(2);el('detailsBuyNow').innerHTML=!a.sold&&a.endTime>Date.now()&&a.buyNow?`<button class="action" onclick="buyNow(${currentAuctionIndex})">Reserve for ${money(a.buyNow)} · pay at pickup</button>`:'';el('sellerMessageButton').hidden=!!signedUser&&a.seller_id===signedUser.id;updateDetailsTimer();}
+function refreshDetails(){const a=auctions[currentAuctionIndex];if(!a)return;el('detailsImage').hidden=!a.image;if(a.image)el('detailsImage').src=a.image;el('detailsTitle').textContent=a.name;el('detailsCategory').textContent=a.category+' · '+a.city+', Ontario · Seller: '+a.seller_name;el('detailsDescription').textContent=a.description;el('detailsPrice').textContent=Number(a.price).toFixed(2);el('detailsBuyNow').innerHTML=!a.sold&&a.endTime>Date.now()&&a.buyNow?`<button class="action" onclick="buyNow(${currentAuctionIndex})">Buy It Now for ${money(a.buyNow)} · pay at pickup</button>`:'';el('sellerMessageButton').hidden=!!signedUser&&a.seller_id===signedUser.id;updateDetailsTimer();}
 function openDetails(index){currentAuctionIndex=index;el('detailsBid').value='';refreshDetails();el('detailsModal').style.display='flex';}
 function closeDetails(){el('detailsModal').style.display='none';currentAuctionIndex=null;}
 async function placeBid(){if(!signedIn()||currentAuctionIndex===null)return;const amount=Number(el('detailsBid').value);if(!Number.isFinite(amount)||amount<=0){alert('Enter a valid bid.');return;}el('bidButton').disabled=true;const {error}=await db.rpc('place_bid',{p_auction_id:auctions[currentAuctionIndex].id,p_amount:amount});if(error)alert(error.message);else {el('detailsBid').value='';alert('Your bid is saved.');}await loadAuctions();updateDetailsTimer();}
-async function buyNow(index){if(!signedIn())return;const a=auctions[index];if(!confirm('Reserve '+a.name+' for '+money(a.buyNow)+'? No online payment will be taken.'))return;const {error}=await db.rpc('reserve_item',{p_auction_id:a.id});if(error)alert(error.message);else {alert('Reservation saved. Open Messages to arrange local pickup with the seller.');await startConversation(a.id,a.seller_id);}await loadAuctions();}
+async function buyNow(index){if(!signedIn())return;const a=auctions[index];if(!confirm('Buy '+a.name+' for '+money(a.buyNow)+'? No online payment will be taken.'))return;const {error}=await db.rpc('reserve_item',{p_auction_id:a.id});if(error)alert(error.message);else {alert('Purchase reserved. Pay at pickup. Open Messages to arrange pickup with the seller.');await startConversation(a.id,a.seller_id);}await loadAuctions();}
 async function createAuction(){
  if(!signedIn())return;const name=el('itemName').value.trim(),city=el('itemCity').value.trim(),category=el('itemCategory').value,price=Number(el('startingBid').value),buy=Number(el('buyNowPrice').value),description=el('itemDescription').value.trim(),rawImage=el('itemImage').value.trim();
  if(!name||name.length>140||!city||city.length>80||!category||!Number.isFinite(price)||price<=0||!Number.isFinite(buy)||buy<0||(buy&&buy<price)||description.length>4000){alert('Enter an item, Ontario pickup city, category and valid prices. Reservation price must be at least the starting bid.');return;}
@@ -2298,4 +2298,71 @@ document.querySelector("#loginModal h2 + p").textContent =
 
 document.querySelector(".hero-content > p").textContent =
   "Ontario local auctions. Sign in to sell, bid, reserve items and message sellers. Payment is arranged directly at pickup.";
+</script>
+
+<script>
+const bidDialog = document.createElement("div");
+bidDialog.className = "modal";
+bidDialog.id = "separateBidModal";
+bidDialog.setAttribute("role","dialog");
+bidDialog.setAttribute("aria-modal","true");
+bidDialog.setAttribute("aria-label","Place a bid");
+bidDialog.innerHTML = '<div class="modal-content"><button class="close" type="button" aria-label="Close bidding">×</button><h2>Place a bid</h2><p id="separateBidTitle"></p><p id="separateBidPrice"></p><div id="bidControls"></div></div>';
+document.body.appendChild(bidDialog);
+el("bidControls").append(el("detailsBid"),el("bidButton"));
+el("detailsBid").step = "0.01";
+function closeBidDialog() {
+  bidDialog.style.display = "none";
+  if (el("detailsModal").style.display !== "flex") currentAuctionIndex = null;
+}
+bidDialog.querySelector(".close").onclick = closeBidDialog;
+bidDialog.onclick = e => {if(e.target===bidDialog)closeBidDialog();};
+function openBidDialog(index) {
+  if (!signedIn()) return;
+  closeDetails();
+  currentAuctionIndex = index;
+  el("detailsBid").value = "";
+  refreshDetails();
+  bidDialog.style.display = "flex";
+  el("detailsBid").focus();
+}
+const bidRefreshBase = refreshDetails;
+refreshDetails = function() {
+  bidRefreshBase();
+  const a = auctions[currentAuctionIndex];
+  if (!a) return;
+  el("separateBidTitle").textContent = a.name;
+  el("separateBidPrice").textContent = "Current bid: "+money(a.price)+" · "+remaining(a);
+};
+const bidRenderBase = renderAuctions;
+renderAuctions = function() {
+  bidRenderBase();
+  auctions.forEach((a,i) => {
+    const card = el("timer-"+i)?.closest(".auction-card");
+    if (!card) return;
+    const row = card.querySelector(".card-buttons");
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = "Bid";
+    button.disabled = a.sold || a.endTime<=Date.now() || (!!signedUser && a.seller_id===signedUser.id);
+    button.onclick = () => openBidDialog(i);
+    row.children[0].after(button);
+  });
+};
+window.addEventListener("keydown",e => {
+  if(e.key==="Escape")closeBidDialog();
+});
+setInterval(() => {
+  if(bidDialog.style.display==="flex" && auctions[currentAuctionIndex]) {
+    const a = auctions[currentAuctionIndex];
+    el("separateBidPrice").textContent = "Current bid: "+money(a.price)+" · "+remaining(a);
+  }
+  document.querySelectorAll(".auction-card").forEach(card => {
+    const timer = card.querySelector('[id^="timer-"]');
+    const a = auctions[Number(timer?.id.slice(6))];
+    const button = [...card.querySelectorAll(".card-buttons button")].find(b=>b.textContent==="Bid");
+    if(a && button)button.disabled = a.sold || a.endTime<=Date.now() || (!!signedUser && a.seller_id===signedUser.id);
+  });
+},1000);
+renderAuctions();
 </script>
