@@ -2398,3 +2398,33 @@ sendMessage = function () {
   form.submit();
 };
 </script>
+<script>
+(function () {
+  const terms =
+    "AuctionHub seller fee: 7% of the final sale price. " +
+    "Pay within 24 hours of the sale email by Interac " +
+    "e-Transfer to isaakmartens19@gmail.com. " +
+    "A $1,000 sale has a $70 fee. No sale means no fee. " +
+    "The buyer pays for the item separately at pickup.";
+
+  const originalSignup = signup;
+  signup = async function () {
+    if (!confirm(terms + "\n\nDo you agree and want to create your account?")) return;
+    return originalSignup();
+  };
+
+  const originalCreate = createAuction;
+  createAuction = async function () {
+    if (!signedIn()) return;
+    if (!confirm(terms + "\n\nDo you agree and want to list this item?")) return;
+    return originalCreate();
+  };
+
+  const notice = document.createElement("p");
+  notice.textContent = terms;
+  notice.style.cssText =
+    "padding:14px;margin-bottom:18px;background:#fff8e8;" +
+    "border:1px solid #c79a45;border-radius:8px";
+  el("createButton").before(notice);
+})();
+</script>
