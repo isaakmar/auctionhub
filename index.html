@@ -2528,3 +2528,39 @@ sendMessage = function () {
   document.addEventListener("visibilitychange", refresh);
 })();
 </script>
+<style>
+#logoutButton,
+#privateMessagesButton {
+  padding: 10px 16px;
+  border: 1px solid #c79a45;
+  border-radius: 8px;
+  background: #20372a;
+  color: white;
+  font-weight: bold;
+}
+#privateMessagesButton {
+  margin-bottom: 16px;
+}
+</style>
+
+<script>
+(function () {
+  const navigation = document.querySelector(".nav-links");
+  navigation.appendChild(el("logoutButton"));
+
+  const messages = document.querySelector(
+    '.hero-content button[onclick="openInbox()"]'
+  );
+  messages.id = "privateMessagesButton";
+  messages.textContent = "Private Messages";
+  messages.setAttribute(
+    "aria-label",
+    "Private messages with buyers and sellers"
+  );
+
+  const help = document.createElement("p");
+  help.textContent = "Chat privately with your buyer or seller.";
+  help.style.cssText = "font-size:14px;margin-bottom:20px";
+  messages.after(help);
+})();
+</script>
