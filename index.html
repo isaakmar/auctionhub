@@ -2112,3 +2112,92 @@ renderAuctions = function() {
 };
 renderAuctions();
 </script>
+<style>
+#photoZoom {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  background: rgba(0,0,0,.95);
+  padding: 60px 12px 20px;
+}
+
+#photoZoom[hidden] {
+  display: none;
+}
+
+#photoZoom img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+#photoZoom button {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  background: white;
+  color: black;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 22px;
+}
+
+.auction-image,
+.card-gallery img,
+#detailsImage {
+  cursor: zoom-in;
+}
+</style>
+
+<script>
+const photoZoom = document.createElement("div");
+photoZoom.id = "photoZoom";
+photoZoom.hidden = true;
+photoZoom.setAttribute("role", "dialog");
+photoZoom.setAttribute("aria-modal", "true");
+photoZoom.setAttribute("aria-label", "Enlarged photo");
+photoZoom.innerHTML =
+  '<button type="button" aria-label="Close enlarged photo">✕</button>' +
+  '<img alt="Enlarged listing photo">';
+document.body.appendChild(photoZoom);
+
+let zoomPreviousFocus;
+let zoomPreviousOverflow;
+
+function closePhotoZoom() {
+  if (photoZoom.hidden) return;
+  photoZoom.hidden = true;
+  document.body.style.overflow = zoomPreviousOverflow;
+  zoomPreviousFocus?.focus();
+}
+
+photoZoom.querySelector("button").onclick = closePhotoZoom;
+photoZoom.onclick = event => {
+  if (event.target === photoZoom) closePhotoZoom();
+};
+
+document.addEventListener("click", event => {
+  const img = event.target.closest(
+    ".auction-image, .card-gallery img, #detailsImage"
+  );
+  if (!img || img.tagName !== "IMG") return;
+
+  zoomPreviousFocus = document.activeElement;
+  zoomPreviousOverflow = document.body.style.overflow;
+  photoZoom.querySelector("img").src = img.currentSrc || img.src;
+  photoZoom.querySelector("img").alt = img.alt || "Listing photo";
+  photoZoom.hidden = false;
+  document.body.style.overflow = "hidden";
+  photoZoom.querySelector("button").focus();
+});
+
+window.addEventListener("keydown", event => {
+  if (photoZoom.hidden) return;
+  if (event.key === "Escape") closePhotoZoom();
+  if (event.key === "Tab") {
+    event.preventDefault();
+    photoZoom.querySelector("button").focus();
+  }
+}, true);
+</script>
